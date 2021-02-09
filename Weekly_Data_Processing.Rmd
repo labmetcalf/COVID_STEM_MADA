@@ -1,0 +1,87 @@
+---
+title: "Weekly_Data_Processing"
+author: "Benny Rice"
+date: "2/8/2021"
+output: html_document
+---
+
+```{r setup, include = FALSE, eval = TRUE, echo = TRUE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE)
+```
+
+***
+***
+<style>
+div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
+</style>
+<div class = "green">
+
+## HEADER INFO
+
+- Benny Rice | Department of Ecology and Evolutionary Biology | Princeton University | b.rice@princeton.edu
+- Code associated with processing data from the **Impacts of Covid-19 on Malagasy STEM** project
+- Apologies in advance for amateurish code (ie all the loops and clunkiness)
+- In colloboration with Lova Marline, Miary Raselimanana, Seheno Andriantsaralaza, Hervet Randriamady
+
+</div>
+
+***
+
+(Set up: Loading necessary libraries)
+```{r i1, echo = FALSE, message = FALSE, eval = TRUE}
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(ggplot2)
+library(reshape2)
+library(ggpubr)
+library(ggalt)
+library(ggrepel)
+library(here)
+library(gridExtra)
+library(readxl)
+```
+
+***
+***
+
+#### OUTLINE:
+
+- Section 1:
+- Section 2:
+- Section 3:
+- Section 4:
+- Section 5:
+
+
+**FIX** Update outline at the end (add figures and tables interspersed ^)
+
+
+***
+***
+
+<style>
+div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
+</style>
+<div class = "green">
+
+### Section 1 | Reading in data downloaded from Kobo Collect (xls form, English)
+
+</div>
+
+***
+***
+
+- Data is read from an xls file that is manually downloaded from the Kobo Collect account
+  - Selecting export options:
+    - Export type `XLS`
+    - Value and header format `XML values and headers`
+    - Do not select `Include fields from all 24 deployed versions`
+  
+  - Then uploaded to the GitHub repository for this project
+- Data file name should include the data at which data was downloaded
+
+```{r 1.01, eval = TRUE}
+k.data <- read_xlsx(here(""))
+```
+
