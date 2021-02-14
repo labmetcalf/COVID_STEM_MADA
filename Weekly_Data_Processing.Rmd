@@ -78,7 +78,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
     - Value and header format `XML values and headers`
     - Do not select `Include fields from all 24 deployed versions`
   - Manually uploading to [the GitHub repository for this project](https://github.com/labmetcalf/COVID_STEM_MADA)
-- Data file name should include the data at which data was downloaded
+- Data file name should include the date at which data was downloaded
 
 ```{r 1.01}
 k.data <- read_xlsx(here("DATA_01_Impacts_of_Covid-19_on_Malagasy_STEM_-_latest_version_-_False_-_2021-02-09-03-17-57.xlsx"))
