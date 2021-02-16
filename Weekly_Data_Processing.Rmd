@@ -131,7 +131,8 @@ p.gender_summary1 <- k.data %>% drop_na(gender) %>% select(agreement, today, gen
   ggplot(aes(x = today, y = n)) +
   geom_bar(stat='identity', width=0.8) +
   xlab("Date") + labs(subtitle = "Sampling by day") +
-  theme_bw()
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 p.gender_summary2 <- k.data %>% drop_na(gender) %>% select(agreement, today, gender) %>% group_by(today) %>% 
   count(gender) %>% ungroup() %>%
@@ -140,7 +141,8 @@ p.gender_summary2 <- k.data %>% drop_na(gender) %>% select(agreement, today, gen
   xlab("Date") + labs(subtitle = "Sampling by day and gender") +
   scale_fill_viridis_d() +
   theme_bw() +
-  theme(legend.position = "right")
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        legend.position = "right")
 
 p.gender_summary3 <- k.data %>% drop_na(gender) %>% select(agreement, today, gender) %>% group_by(today) %>% 
   summarize(n = length(today), .groups = "drop") %>% 
@@ -148,7 +150,9 @@ p.gender_summary3 <- k.data %>% drop_na(gender) %>% select(agreement, today, gen
   ggplot(aes(x = today, y = n_cum)) +
   geom_bar(stat='identity', width=0.8, fill = "#ff6f00") +
   xlab("Date") + labs(subtitle = "Cumulative Sampling by day") +
-  theme_bw()
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
 ```
 
 ```{r 2.03, fig.height = 7, fig.width = 10}
