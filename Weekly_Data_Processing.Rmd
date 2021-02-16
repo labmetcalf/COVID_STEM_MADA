@@ -113,26 +113,27 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 paste0("Dates of surveys completed: ")
 paste0(unique(k.data$today))
 paste0("Number of surveys completed (n) = ", length(k.data$agreement[k.data$agreement == "yes"]))
+paste0("Number of incomplete or aborted surveys = ", sum(is.na(k.data$gender)))
 paste0("Number of surveys completed, female = ", 
        length(k.data$agreement[k.data$agreement == "yes" & k.data$gender == "female"]))
 paste0("Number of surveys completed, male  = ", 
        length(k.data$agreement[k.data$agreement == "yes" & k.data$gender == "male"]))
 paste0("Number of surveys completed, nonbinary gender = ", 
-       length(k.data$agreement[k.data$agreement == "yes" & k.data$gender == "other_notsay"]))
+       length(k.data$agreement[!is.na(k.data$gender) & k.data$gender == "other_notsay"]))
 paste0("Average number of surveys performed per day of sampling = ",
        length(k.data$agreement[k.data$agreement == "yes"])/length(unique(k.data$today)))
 ```
 
 - Summary of sampling progress, time series plot:
 ```{r 2.02, echo = FALSE}
-p.gender_summary1 <- k.data %>% select(agreement, today, gender) %>% group_by(today) %>% 
-  summarize(n = length(today), .groups = "drop") %>% 
+p.gender_summary1 <- k.data %>% drop_na(gender) %>% select(agreement, today, gender) %>% group_by(today) %>% 
+  summarize(n = length(today), .groups = "drop") %>%
   ggplot(aes(x = today, y = n)) +
   geom_bar(stat='identity', width=0.8) +
   xlab("Date") + labs(subtitle = "Sampling by day") +
   theme_bw()
 
-p.gender_summary2 <- k.data %>% select(agreement, today, gender) %>% group_by(today) %>% 
+p.gender_summary2 <- k.data %>% drop_na(gender) %>% select(agreement, today, gender) %>% group_by(today) %>% 
   count(gender) %>% ungroup() %>%
   ggplot(aes(x = today, y = n, fill = gender)) +
   geom_bar(stat='identity', width=0.8) +
@@ -141,7 +142,7 @@ p.gender_summary2 <- k.data %>% select(agreement, today, gender) %>% group_by(to
   theme_bw() +
   theme(legend.position = "right")
 
-p.gender_summary3 <- k.data %>% select(agreement, today, gender) %>% group_by(today) %>% 
+p.gender_summary3 <- k.data %>% drop_na(gender) %>% select(agreement, today, gender) %>% group_by(today) %>% 
   summarize(n = length(today), .groups = "drop") %>% 
   mutate(n_cum = cumsum(n)) %>%
   ggplot(aes(x = today, y = n_cum)) +
@@ -176,11 +177,11 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 
 Research activity affects by gender
 ```{r 3.01, echo = FALSE}
-p.301a <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>%
+p.301a <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
   filter(gender != "other_notsay") %>% 
   group_by(gender) %>% count(fieldwork_affect) %>% ungroup() %>%
   mutate(fieldwork_affect = factor(fieldwork_affect, 
-                                   levels = rev(c("na", "slightaffect", "modaffect", "veryaffect")))) %>%
+                                   levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
   ggplot(aes(x = gender, y = n, fill = fieldwork_affect)) +
   geom_bar(position="fill", stat='identity', width=0.8) +
   labs(subtitle = "Affects on fieldwork by gender (with NAs)") + xlab("Sex") + ylab("Proportion") +
@@ -188,11 +189,11 @@ p.301a <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>%
   theme_bw() +
   theme(legend.position = "right")
 
-p.301b <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>%
+p.301b <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
   filter(gender != "other_notsay") %>% 
   group_by(gender) %>% count(writ_affect) %>% ungroup() %>%
   mutate(writ_affect = factor(writ_affect, 
-                              levels = rev(c("na","nochangeaffect",  "slightaffect", "modaffect", "veryaffect")))) %>%
+                              levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
   ggplot(aes(x = gender, y = n, fill = writ_affect)) +
   geom_bar(position="fill", stat='identity', width=0.8) +
   labs(subtitle = "Affects on writing by gender (with NAs)") + xlab("Sex") + ylab("Proportion") +
@@ -200,29 +201,42 @@ p.301b <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>%
   theme_bw() +
   theme(legend.position = "right")
 
-p.301c <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>%
+p.301c <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
   filter(gender != "other_notsay") %>% 
   group_by(gender) %>% count(fieldwork_affect) %>% ungroup() %>%
   filter(fieldwork_affect != "na") %>%
   mutate(fieldwork_affect = factor(fieldwork_affect, 
-                                   levels = rev(c("slightaffect", "modaffect", "veryaffect")))) %>%
+                                   levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
   ggplot(aes(x = gender, y = n, fill = fieldwork_affect)) +
   geom_bar(position="fill", stat='identity', width=0.8) +
-  labs(subtitle = "Affects on fieldwork by gender (without NAs)") + xlab("Sex") + ylab("Proportion") +
-  scale_fill_viridis_d(option = "magma") +
+  labs(subtitle = "Affects on fieldwork\nby sex (without NAs)") + xlab("Sex") + ylab("Proportion") +
+  scale_fill_viridis_d(option = "inferno", direction = -1) +
   theme_bw() +
   theme(legend.position = "right")
 
-p.301d <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>%
+p.301d <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
   filter(gender != "other_notsay") %>% 
   group_by(gender) %>% count(writ_affect) %>% ungroup() %>%
   filter(writ_affect != "na") %>%
   mutate(writ_affect = factor(writ_affect, 
-                              levels = rev(c("na","nochangeaffect",  "slightaffect", "modaffect", "veryaffect")))) %>%
+                              levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
   ggplot(aes(x = gender, y = n, fill = writ_affect)) +
   geom_bar(position="fill", stat='identity', width=0.8) +
-  labs(subtitle = "Affects on writing by gender (without NAs") + xlab("Sex") + ylab("Proportion") +
-  scale_fill_viridis_d(option = "magma") +
+  labs(subtitle = "Affects on writing\nby sex (without NAs)") + xlab("Sex") + ylab("Proportion") +
+  scale_fill_viridis_d(option = "inferno", direction = -1) +
+  theme_bw() +
+  theme(legend.position = "right")
+
+p.301e <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
+  filter(gender != "other_notsay") %>% 
+  group_by(gender) %>% count(data_affect) %>% ungroup() %>%
+  filter(data_affect != "na") %>%
+  mutate(data_affect = factor(data_affect, 
+                              levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
+  ggplot(aes(x = gender, y = n, fill = data_affect)) +
+  geom_bar(position="fill", stat='identity', width=0.8) +
+  labs(subtitle = "Affects on data analysis activity\nby sex (without NAs)") + xlab("Sex") + ylab("Proportion") +
+  scale_fill_viridis_d(option = "inferno", direction = -1) +
   theme_bw() +
   theme(legend.position = "right")
 ```
@@ -233,7 +247,7 @@ grid.arrange(p.301a, p.301b, nrow = 1)
 ```
 
 ```{r 3.03, fig.height=7, fig.width=10}
-grid.arrange(p.301c, p.301d, nrow = 1)
+grid.arrange(p.301c, p.301d, p.301e, nrow = 1)
 ```
 
 
