@@ -215,7 +215,7 @@ p.301c <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_n
   ggplot(aes(x = gender, y = n, fill = fieldwork_affect)) +
   geom_bar(position="fill", stat='identity', width=0.8) +
   labs(subtitle = "Impacts on fieldwork by gender\n(among applicable respondents)") + 
-  xlab("Sex") + ylab("Proportion") +
+  xlab("Gender") + ylab("Proportion") +
   scale_fill_viridis_d(option = "inferno", direction = -1, name = "Impact: ", 
                        labels = c("Strong", "Moderate", "Slight", "None")) +
   theme_bw() +
@@ -230,7 +230,7 @@ p.301d <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_n
   ggplot(aes(x = gender, y = n, fill = writ_affect)) +
   geom_bar(position="fill", stat='identity', width=0.8) +
   labs(subtitle = "Impacts on writing by gender\n(among applicable respondents)") + 
-  xlab("Sex") + ylab("Proportion") +
+  xlab("Gender") + ylab("Proportion") +
   scale_fill_viridis_d(option = "inferno", direction = -1, name = "Impact: ", 
                        labels = c("Strong", "Moderate", "Slight", "None")) +
   theme_bw() +
@@ -246,7 +246,7 @@ p.301e <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_n
   ggplot(aes(x = gender, y = n, fill = data_affect)) +
   geom_bar(position="fill", stat='identity', width=0.8) +
   labs(subtitle = "Impacts on data analysis by gender\n(among applicable respondents)") +
-  xlab("Sex") + ylab("Proportion") +
+  xlab("Gender") + ylab("Proportion") +
   scale_fill_viridis_d(option = "inferno", direction = -1, name = "Impact: ", 
                        labels = c("Strong", "Moderate", "Slight", "None")) +
   theme_bw() +
@@ -261,7 +261,8 @@ grid.arrange(p.301a, p.301b, nrow = 1)
 ```
 
 
-**Figure 3 Impacts of COVID-19 disruptions on fieldwork, writing, and data analysis activity among Malagasy STEM by gender** (for those respondents identifying these as applicable activities for their work or studies)
+**Figure 3 Impacts of COVID-19 disruptions on fieldwork, writing, and data analysis activity among Malagasy STEM by gender**
+(for those respondents identifying these as applicable activities for their work or studies)
 
 ```{r 3.03, fig.height=7, fig.width=10, echo=FALSE}
 grid.arrange(p.301c, p.301d, p.301e, nrow = 1)
