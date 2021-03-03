@@ -73,6 +73,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 ***
 
 - Data is read from an xlsx file that is manually downloaded from the Kobo Collect account
+  - [KoBoToolbox](https://kf.kobotoolbox.org/#/forms) --> `Impacts of Covid-19 on Malagasy STEM` --> `DATA` --> `Downloads`
   - Selecting export options:
     - Export type `XLS`
     - Value and header format `XML values and headers`
@@ -81,7 +82,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 - Data file name should include the date at which data was downloaded
 
 ```{r 1.01}
-k.data <- read_xlsx(here("DATA_02_Impacts_of_Covid-19_on_Malagasy_STEM_-_latest_version_-_False_-_2021-02-16-18-02-16.xlsx"))
+k.data <- read_xlsx(here("DATA_03_Impacts_of_Covid-19_on_Malagasy_STEM_-_latest_version_-_False_-_2021-03-03-11-18-58.xlsx"))
 ```
 
 - Previewing data
@@ -110,8 +111,8 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 - Summary of sampling progress listed:
 
 ```{r 2.01, echo = FALSE}
-paste0("Dates of surveys completed: ")
-paste0(unique(k.data$today))
+paste0("Dates of surveys completed:")
+paste0(sort(unique(k.data$today)))
 paste0("Number of surveys completed (n) = ", length(k.data$agreement[k.data$agreement == "yes"]))
 paste0("Number of incomplete or aborted surveys = ", sum(is.na(k.data$gender)))
 paste0("Number of surveys completed, female = ", 
@@ -149,7 +150,7 @@ p.gender_summary3 <- k.data %>% drop_na(gender) %>% select(agreement, today, gen
   mutate(n_cum = cumsum(n)) %>%
   ggplot(aes(x = today, y = n_cum)) +
   geom_bar(stat='identity', width=0.8, fill = "#ff6f00") +
-  xlab("Date") + labs(subtitle = "Cumulative Sampling by day") +
+  xlab("Date") + ylab ("Cumulative number of surveys completed") + labs(subtitle = "Cumulative Sampling by day") +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
@@ -159,7 +160,7 @@ p.gender_summary3 <- k.data %>% drop_na(gender) %>% select(agreement, today, gen
 grid.arrange(p.gender_summary1, p.gender_summary2, nrow = 1)
 ```
 
-```{r 2.04, fig.height = 7, fig.width = 5}
+```{r 2.04, fig.height = 7, fig.width = 10}
 p.gender_summary3
 ```
 
@@ -179,7 +180,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 ***
 ***
 
-Research activity affects by gender
+Plotting research activity affects by gender
 ```{r 3.01, echo = FALSE}
 p.301a <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
   filter(gender != "other_notsay") %>% 
@@ -208,49 +209,61 @@ p.301b <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_n
 p.301c <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
   filter(gender != "other_notsay") %>% 
   group_by(gender) %>% count(fieldwork_affect) %>% ungroup() %>%
-  filter(fieldwork_affect != "na") %>%
   mutate(fieldwork_affect = factor(fieldwork_affect, 
                                    levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
+  filter(fieldwork_affect != "na") %>%
   ggplot(aes(x = gender, y = n, fill = fieldwork_affect)) +
   geom_bar(position="fill", stat='identity', width=0.8) +
-  labs(subtitle = "Affects on fieldwork\nby sex (without NAs)") + xlab("Sex") + ylab("Proportion") +
-  scale_fill_viridis_d(option = "inferno", direction = -1) +
+  labs(subtitle = "Impacts on fieldwork by gender\n(among applicable respondents)") + 
+  xlab("Sex") + ylab("Proportion") +
+  scale_fill_viridis_d(option = "inferno", direction = -1, name = "Impact: ", 
+                       labels = c("Strong", "Moderate", "Slight", "None")) +
   theme_bw() +
-  theme(legend.position = "right")
+  theme(legend.position = "top", legend.title = element_text(size = 5), legend.text = element_text(size = 5))
 
 p.301d <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
   filter(gender != "other_notsay") %>% 
   group_by(gender) %>% count(writ_affect) %>% ungroup() %>%
-  filter(writ_affect != "na") %>%
   mutate(writ_affect = factor(writ_affect, 
-                              levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
+                                   levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
+  filter(writ_affect != "na") %>%
   ggplot(aes(x = gender, y = n, fill = writ_affect)) +
   geom_bar(position="fill", stat='identity', width=0.8) +
-  labs(subtitle = "Affects on writing\nby sex (without NAs)") + xlab("Sex") + ylab("Proportion") +
-  scale_fill_viridis_d(option = "inferno", direction = -1) +
+  labs(subtitle = "Impacts on writing by gender\n(among applicable respondents)") + 
+  xlab("Sex") + ylab("Proportion") +
+  scale_fill_viridis_d(option = "inferno", direction = -1, name = "Impact: ", 
+                       labels = c("Strong", "Moderate", "Slight", "None")) +
   theme_bw() +
-  theme(legend.position = "right")
+  theme(legend.position = "top", legend.title = element_text(size = 5), legend.text = element_text(size = 5))
+
 
 p.301e <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
   filter(gender != "other_notsay") %>% 
   group_by(gender) %>% count(data_affect) %>% ungroup() %>%
-  filter(data_affect != "na") %>%
   mutate(data_affect = factor(data_affect, 
-                              levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
+                                   levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
+  filter(data_affect != "na") %>%
   ggplot(aes(x = gender, y = n, fill = data_affect)) +
   geom_bar(position="fill", stat='identity', width=0.8) +
-  labs(subtitle = "Affects on data analysis activity\nby sex (without NAs)") + xlab("Sex") + ylab("Proportion") +
-  scale_fill_viridis_d(option = "inferno", direction = -1) +
+  labs(subtitle = "Impacts on data analysis by gender\n(among applicable respondents)") +
+  xlab("Sex") + ylab("Proportion") +
+  scale_fill_viridis_d(option = "inferno", direction = -1, name = "Impact: ", 
+                       labels = c("Strong", "Moderate", "Slight", "None")) +
   theme_bw() +
-  theme(legend.position = "right")
+  theme(legend.position = "top", legend.title = element_text(size = 5), legend.text = element_text(size = 5))
+
 ```
 
 
-```{r 3.02, fig.height=7, fig.width=10}
+**Figure 3** Impacts of COVID-19 disruptions on fieldwork and writing by gender (including those that responded "not applicable")
+```{r 3.02, fig.height=7, fig.width=10, echo=FALSE}
 grid.arrange(p.301a, p.301b, nrow = 1)
 ```
 
-```{r 3.03, fig.height=7, fig.width=10}
+
+**Figure 3 Impacts of COVID-19 disruptions on fieldwork, writing, and data analysis activity among Malagasy STEM by gender** (for those respondents identifying these as applicable activities for their work or studies)
+
+```{r 3.03, fig.height=7, fig.width=10, echo=FALSE}
 grid.arrange(p.301c, p.301d, p.301e, nrow = 1)
 ```
 
