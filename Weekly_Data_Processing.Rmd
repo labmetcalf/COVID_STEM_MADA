@@ -109,41 +109,89 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 ***
 
 - Cleaning up "other" responses for:
-  - field of study (`field`)
-  - academic stage / position (`acad`)
-  - type of institution (`inst`)
+  - field of study (`other_field`)
+  - academic stage / position (`other_acad`)
+  - type of institution (`other_inst`)
+  - challenges  to attend online opportunities (`other_challenge_opport`)
   
 - Changing text responses by hardcoding following the tables below
 
-| No | raw response text                                 | cleaned text |
-| 01 | ------------------------------------------------- | ------------ |
-| 02 | HYDROSCIENCES                                     |              |
-| 03 | Sciences Agronomiques                             |  |
-| 04 | Sciences agronomiques                             |  |
-| 05 | sciences agronomiques                             |  |
-| 06 | SCIENCES AGRONOMIQUES                             |  |
-| 07 | Pharmacologie                                     |  |
-| 08 | pharmacologie                                     |  |
-| 09 | Pharmacology                                      |  |
-| 10 | Pharmacologie et Cosmétologie                     |  |
-| 11 | PHARMACOLOGIE                                     |  |
-| 12 | Pharmarmacologie, cosmetic                        |  |
-| 13 | Nutrition                                         |  |
-| 14 | Sciences et technique nucleaires                  |  |
-| 15 | Sciences nucleaires, physiques, nanotechnologie   |  |
-| 16 | Sciences et techniques nucléaires                 |  |
-| 17 | Sciences techniques nucleaires et nanotechnologie |  |
-| 18 | Ecotourism science                                |  |
-| 19 | Paléontologie                                     |  |
+**Field of study**
+
+Listing other responses
+```{r 2.01.1, echo = FALSE}
+paste0("Number of other responses: ", length(unique(k.data$other_field)) - 1)
+unique(k.data$other_field[!is.na(k.data$other_field)])
+```
+- Notes:
+  - Agronomic Sciences and Agriculture & Natural Resources can probably be combined
+
+| Num | raw response text                                   | cleaned text                                     |
+| --- | --------------------------------------------------- | ------------------------------------------------ |
+| 01  | "HYDROSCIENCES"                                     | "Atmospheric Sciences, Earth and Ocean Sciences" |
+| 02  | "Sciences Agronomiques"                             | "Agronomic Sciences"                             |
+| 03  | "Sciences agronomiques"                             | "Agronomic Sciences"                             |
+| 04  | "sciences agronomiques"                             | "Agronomic Sciences"                             |
+| 05  | "SCIENCES AGRONOMIQUES"                             | "Agronomic Sciences"                             |
+| 06  | "Pharmacologie"                                     | "Pharmacology, Physiology & Cosmetology"         |
+| 07  | "pharmacologie"                                     | "Pharmacology, Physiology & Cosmetology"         |
+| 08  | "Pharmacology"                                      | "Pharmacology, Physiology & Cosmetology"         |
+| 09  | "Pharmacologie et Cosmétologie"                     | "Pharmacology, Physiology & Cosmetology"         |
+| 10  | "PHARMACOLOGIE"                                     | "Pharmacology, Physiology & Cosmetology"         |
+| 11  | "Pharmarmacologie, cosmetic"                        | "Pharmacology, Physiology & Cosmetology"         |
+| 12  | "Nutrition"                                         | "Health Sciences"                                |
+| 13  | "Sciences et technique nucleaires"                  | "Physics"                                        |
+| 14  | "Sciences nucleaires, physiques, nanotechnologie"   | "Physics"                                        |
+| 15  | "Sciences et techniques nucléaires"                 | "Physics"                                        |
+| 16  | "Sciences techniques nucleaires et nanotechnologie" | "Physics"                                        |
+| 17  | "Ecotourism science"                                | "Agriculture & Natural Resources"                |
+| 18  | "Paléontologie"                                     | "Biological Sciences"                            |
+
+```{r 2.01.1, echo = FALSE}
+#Replacing other responses with standard text
+k.data <- k.data %>% mutate(field = recode(field)
+
+mutate(sex=recode(sex, 
+                         `1`="Male",
+                         `2`="Female"))
+```
+
+
+**Academic stage / position**
+
+Listing other responses
+```{r 2.02, echo = FALSE}
+paste0("Number of other responses: ", length(unique(k.data$other_acad)) - 1)
+unique(k.data$other_acad[!is.na(k.data$other_acad)])
+```
+- Notes:
+  - What is the difference between Consultant, Independent researcher, and Research officer?
+  - Research assistant should be changed to Research assistant or technician
+  - Add "Principal investigator" or "Research group leader" to Professor etc
+  - Need to check respondent's responses to other questions for some to see what level they are at
+
+| Num | raw response text                        | cleaned text                                          |
+| --- | ---------------------------------------- | ----------------------------------------------------- |
+| 01  | "Cadre dans une Entreprise"              | ???                                                   |
+| 02  | "Enseignant-chercher (vacataire)"        | ???                                                   |
+| 03  | "Technicien de laboratoire"              | "Research assistant"                                  |
+| 04  | "Enseignant vacataire,   consultant"     | "Consultant"                                          |
+| 05  | "Médecin"                                | ??? Post doctoral researcher?                         |
+| 06  | "I am recently graduated and would ..."* | ???                                                   |
+| 07  | "Medicin"                                | ??? Post doctoral researcher?                         |
+| 08  | "Professeur"                             | "Faculty member, Professor, or University Instructor" |
+| 09  | "etudiante en licence"                   | ??? Should they be eligible?                          |
+| 10  | "Directeur Général"                      | "Faculty member, Professor, or University Instructor" |
+| 11  | "Président GERP"                         | "Faculty member, Professor, or University Instructor" |
+| 12  | "Fonctionnaire de l'état"                | ???                                                   |
+| 13  | "Professeur titulaire"                   | "Faculty member, Professor, or University Instructor" |
+| 14  | "CLO Multidisciplinaire"                 | ???                                                   |
+| 15  | "Formation spécialisée"                  | ???                                                   |
 
 
 
-                     
-[11] ""                                     "Nutrition"                                        
-[13] "                       "Sciences et technique nucleaires"                 
-[15] "Sciences nucleaires, physiques, nanotechnologie"   "Sciences et techniques nucléaires"                
-[17] "Sciences techniques nucleaires et nanotechnologie" "Ecotourism science"                               
-[19] "Paléontologie"         
+
+
 
 ***
 ***
