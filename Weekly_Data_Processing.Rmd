@@ -119,11 +119,8 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 **Field of study**
 
 Listing other responses
-<<<<<<< HEAD
+
 ```{r 2.01.1, echo = FALSE}
-=======
-```{r 2.01, echo = FALSE}
->>>>>>> 2a552cb262eb4cd85fab8343ca880b2288fb9b05
 paste0("Number of other responses: ", length(unique(k.data$other_field)) - 1)
 unique(k.data$other_field[!is.na(k.data$other_field)])
 ```
@@ -151,18 +148,16 @@ unique(k.data$other_field[!is.na(k.data$other_field)])
 | 17  | "Ecotourism science"                                | "Agriculture & Natural Resources"                |
 | 18  | "Paléontologie"                                     | "Biological Sciences"                            |
 
-<<<<<<< HEAD
 ```{r 2.01.1, echo = FALSE}
 #Replacing other responses with standard text
-k.data <- k.data %>% mutate(field = recode(field)
+k.data <- k.data %>% mutate(field = recode(field))
 
 mutate(sex=recode(sex, 
                          `1`="Male",
                          `2`="Female"))
 ```
 
-=======
->>>>>>> 2a552cb262eb4cd85fab8343ca880b2288fb9b05
+
 
 **Academic stage / position**
 
@@ -175,7 +170,6 @@ unique(k.data$other_acad[!is.na(k.data$other_acad)])
   - What is the difference between Consultant, Independent researcher, and Research officer?
   - Research assistant should be changed to Research assistant or technician
   - Add "Principal investigator" or "Research group leader" to Professor etc
-<<<<<<< HEAD
   - Need to check respondent's responses to other questions for some to see what level they are at
 
 | Num | raw response text                        | cleaned text                                          |
@@ -195,32 +189,6 @@ unique(k.data$other_acad[!is.na(k.data$other_acad)])
 | 13  | "Professeur titulaire"                   | "Faculty member, Professor, or University Instructor" |
 | 14  | "CLO Multidisciplinaire"                 | ???                                                   |
 | 15  | "Formation spécialisée"                  | ???                                                   |
-
-
-
-=======
-  - Need to check other responses for some to see what level they are at
-
-
-
-| Num | raw response text                                                                   | cleaned text                                   |
-| --- | ----------------------------------------------------------------------------------- | ---------------------------------------------- |
-| 01  | "Cadre dans une Entreprise"                                                         | "
-| 02  | "Enseignant-chercher (vacataire)"                                                   | "
-| 03  | "Technicien de laboratoire"                                                         | "
-| 04  | "Enseignant vacataire,   consultant"                                                | "
-| 05  | "Médecin"                                                                           | "
-| 06  | "I am recently graduated and would like to wait a while before continuing my study" | "
-| 07  | "Medicin"                                                                           | "
-| 08  | "Professeur"                                                                        | "
-| 09  | "etudiante en licence"                                                              | "
-| 10  | "Directeur Général"                                                                 | "
-| 11  | "Président GERP"                                                                    | "
-| 12  | "Fonctionnaire de l'état"                                                           | "
-| 13  | "Professeur titulaire"                                                              | "
-| 14  | "CLO Multidisciplinaire"                                                            | "
-| 15  | "Formation spécialisée"                                                             | "
->>>>>>> 2a552cb262eb4cd85fab8343ca880b2288fb9b05
 
 
 
