@@ -118,12 +118,13 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 
 **Field of study**
 
-Listing other responses
+- Listing other responses
 
 ```{r 2.01.1, echo = FALSE}
 paste0("Number of other responses: ", length(unique(k.data$other_field)) - 1)
 unique(k.data$other_field[!is.na(k.data$other_field)])
 ```
+
 - Notes:
   - Agronomic Sciences and Agriculture & Natural Resources can probably be combined
 
