@@ -151,7 +151,7 @@ unique(k.data$other_field[!is.na(k.data$other_field)])
 
 ```{r 2.01.1, echo = FALSE}
 #Replacing other responses with standard text
-k.data <- k.data %>% mutate(field = recode(field))
+k.data <- k.data %>% mutate(field = recode(ifesle(field == "Sciences et technique nucleaires", "Physics", NA)) 
 
 mutate(sex=recode(sex, 
                          `1`="Male",
