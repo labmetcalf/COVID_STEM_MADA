@@ -83,7 +83,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 - Data file name should include the date at which data was downloaded
 
 ```{r 1.01}
-k.data <- read_xlsx(here("DATA_03_Impacts_of_Covid-19_on_Malagasy_STEM_-_latest_version_-_False_-_2021-03-03-11-18-58.xlsx"))
+k.data <- read_xlsx(here("DATA_04_Impacts_of_Covid-19_on_Malagasy_STEM_-_latest_version_-_False_-_2021-04-11-05-57-47.xlsx"))
 ```
 
 - Previewing data
@@ -151,14 +151,12 @@ unique(k.data$other_field[!is.na(k.data$other_field)])
 
 ```{r 2.01.1, echo = FALSE}
 #Replacing other responses with standard text
-k.data <- k.data %>% mutate(field = recode(ifesle(field == "Sciences et technique nucleaires", "Physics", NA)) 
+#k.data <- k.data %>% mutate(field = recode(ifesle(field == "Sciences et technique nucleaires", "Physics", NA)) 
 
-mutate(sex=recode(sex, 
-                         `1`="Male",
-                         `2`="Female"))
+#mutate(sex=recode(sex, 
+#                         `1`="Male",
+#                         `2`="Female"))
 ```
-
-TEST - GITHUB IS COOL
 
 
 **Academic stage / position**
@@ -371,11 +369,77 @@ grid.arrange(p.301c, p.301d, p.301e, nrow = 1)
 
 
 
+***
+***
+
+<style>
+div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
+</style>
+<div class = "green">
+
+### Section 5 | Preliminary data visualizations: Ranked stressors by gender
+
+</div>
+
+***
+***
+
+(using "slopegraphs": [example](https://charliepark.org/slopegraphs/), [example](https://acaird.github.io/computers/r/2013/11/27/slopegraphs-ggplot), [example](https://ibecav.github.io/slopegraph/))
+
+- Preparing data for plotting
+```{r 5.01, fig.height=7, fig.width=10, echo=FALSE}
+#Selecting relevant columns, dropping NAs, and nonbinary gender respondents (because n = 3)
+df.stress <- k.data %>% select(age:acad, stress_delaywork:stress_relation, stress_moneyemplo:stress_anxiety) %>% 
+  drop_na() %>%
+  filter(gender != "other_notsay")
+#Calculating the percent of respondents with moderate, strong, or extreme stress (p.ss) for each topic
+df.stress.all <- df.stress %>% group_by(gender) %>% summarize(
+  p.ss.delaywork  = length(which(stress_delaywork %in% 
+                                  c("modstress", "strongstress", "extrastress")))/length(stress_delaywork),
+  p.ss.career     = length(which(stress_career %in% 
+                                  c("modstress", "strongstress", "extrastress")))/length(stress_career),
+  p.ss.burden     = length(which(stress_burden %in% 
+                                  c("modstress", "strongstress", "extrastress")))/length(stress_burden),
+  p.ss.relation   = length(which(stress_relation %in% 
+                                  c("modstress", "strongstress", "extrastress")))/length(stress_relation),
+  p.ss.moneyemplo = length(which(stress_moneyemplo %in% 
+                                  c("modstress", "strongstress", "extrastress")))/length(stress_moneyemplo),
+  p.ss.pershealth = length(which(stress_pershealth %in% 
+                                   c("modstress", "strongstress", "extrastress")))/length(stress_pershealth),
+  p.ss.healthfam  = length(which(stress_healthfam %in% 
+                                  c("modstress", "strongstress", "extrastress")))/length(stress_healthfam),
+  p.ss.anxiety    = length(which(stress_anxiety %in% 
+                                c("modstress", "strongstress", "extrastress")))/length(stress_anxiety)) %>%
+  melt(id.vars = "gender")
+
+
+ggplot(data = df.stress.all, aes(x = gender, y = value, group = variable)) +
+  geom_line(aes(color = variable, alpha = 1), size = 1) +
+  geom_point(aes(color = variable, alpha = 1), size = 3) +
+  geom_text_repel(data = df.stress.all %>% filter(gender == "female"), 
+                  aes(label = paste0(variable, " : ", round(value*100, 2), "%")) , 
+                  hjust = "left", 
+                  fontface = "bold", 
+                  size = 4, 
+                  nudge_x = -.45, 
+                  direction = "y") +
+  geom_text_repel(data = df.stress.all %>% filter(gender == "male"), 
+                  aes(label = paste0(variable, " : ", round(value*100, 2), "%")) , 
+                  hjust = "right", 
+                  fontface = "bold", 
+                  size = 4, 
+                  nudge_x = .5, 
+                  direction = "y") +
+  MySpecial +
+  labs(
+    title = "Stress",
+    subtitle = "n = 700",
+    caption = "comparing women and men"
+  )
 
 
 
-
-
+```
 
 
 
