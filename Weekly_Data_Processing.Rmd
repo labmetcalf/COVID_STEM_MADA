@@ -78,7 +78,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
   - Selecting export options:
     - Export type `XLS`
     - Value and header format `XML values and headers`
-    - Do not select `Include fields from all 24 deployed versions`
+    - `Advanced options`: Do NOT select `Include fields from all 31 deployed versions`
   - Manually uploading to [the GitHub repository for this project](https://github.com/labmetcalf/COVID_STEM_MADA)
 - Data file name should include the date at which data was downloaded
 
