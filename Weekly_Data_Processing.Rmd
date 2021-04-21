@@ -413,6 +413,33 @@ df.stress.all <- df.stress %>% group_by(gender) %>% summarize(
   melt(id.vars = "gender")
 
 
+#Putting all the thematic changes to the plot in a list:
+MySpecial <- list(  
+  # move the x axis labels up top
+  scale_x_discrete(position = "top"),
+  theme_bw(),
+  # Format tweaks
+  # Remove the legend
+  theme(legend.position = "none"),
+  # Remove the panel border
+  theme(panel.border     = element_blank()),
+  # Remove just about everything from the y axis
+  theme(axis.title.y     = element_blank()),
+  theme(axis.text.y      = element_blank()),
+  theme(panel.grid.major.y = element_blank()),
+  theme(panel.grid.minor.y = element_blank()),
+  # Remove a few things from the x axis and increase font size
+  theme(axis.title.x     = element_blank()),
+  theme(panel.grid.major.x = element_blank()),
+  theme(axis.text.x.top      = element_text(size=12)),
+  # Remove x & y tick marks
+  theme(axis.ticks       = element_blank()),
+  # Format title & subtitle
+  theme(plot.title       = element_text(size=14, face = "bold", hjust = 0.5)),
+  theme(plot.subtitle    = element_text(hjust = 0.5))
+)
+
+
 ggplot(data = df.stress.all, aes(x = gender, y = value, group = variable)) +
   geom_line(aes(color = variable, alpha = 1), size = 1) +
   geom_point(aes(color = variable, alpha = 1), size = 3) +
