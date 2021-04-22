@@ -83,7 +83,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 - Data file name should include the date at which data was downloaded
 
 ```{r 1.01}
-k.data <- read_xlsx(here("DATA_04_Impacts_of_Covid-19_on_Malagasy_STEM_-_latest_version_-_False_-_2021-04-11-05-57-47.xlsx"))
+k.data <- read_xlsx(here("DATA_05_Impacts_of_Covid-19_on_Malagasy_STEM_-_latest_version_-_False_-_2021-04-22-14-19-13.xlsx"))
 ```
 
 - Previewing data
@@ -386,6 +386,19 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 
 (using "slopegraphs": [example](https://charliepark.org/slopegraphs/), [example](https://acaird.github.io/computers/r/2013/11/27/slopegraphs-ggplot), [example](https://ibecav.github.io/slopegraph/))
 
+Section 6: Stress during the coronavirus pandemic
+
+- 1) Did you experience increased stress that related to your efficiency at work (e.g., procrastination, deadlines)? `stress_delaywork`
+- 2) Did you experience increased stress related to your future career plans? `stress_career`
+- 3) Did you experience increased stress related to the burden of childcare and household work? `stress_burden`
+- 4) Did you experience increased stress related to your personal relationships or marriage? `stress_relation`
+- 5) Did you experience increased stress related to pregnancy / access to birth control / family planning? `stress_pregbirth`
+- 6) Did you experience increased stress associated with money issues (e.g., paying bills)? `stress_moneyemplo`
+- 7) Did you experience increased stress related to your personal health? `stress_pershealth`
+- 8) Did you experience increased stress related to the health of your family members? `stress_healthfam`
+- 9) Did you experience increased stress related to social anxiety: loneliness, lack of social interaction, lack of personal space, depression, lack of physical activity? `stress_anxiety`
+
+
 - Preparing data for plotting
 ```{r 5.01, fig.height=7, fig.width=10, echo=FALSE}
 #Selecting relevant columns, dropping NAs, and nonbinary gender respondents (because n = 3)
@@ -405,14 +418,16 @@ df.stress.all <- df.stress %>% group_by(gender) %>% summarize(
   p.ss.moneyemplo = length(which(stress_moneyemplo %in% 
                                   c("modstress", "strongstress", "extrastress")))/length(stress_moneyemplo),
   p.ss.pershealth = length(which(stress_pershealth %in% 
-                                   c("modstress", "strongstress", "extrastress")))/length(stress_pershealth),
+                                  c("modstress", "strongstress", "extrastress")))/length(stress_pershealth),
   p.ss.healthfam  = length(which(stress_healthfam %in% 
                                   c("modstress", "strongstress", "extrastress")))/length(stress_healthfam),
   p.ss.anxiety    = length(which(stress_anxiety %in% 
-                                c("modstress", "strongstress", "extrastress")))/length(stress_anxiety)) %>%
+                                  c("modstress", "strongstress", "extrastress")))/length(stress_anxiety), .groups = "drop") %>%
   melt(id.vars = "gender")
+```
 
-
+- Plotting
+```{r 5.02, fig.height=7, fig.width=10, echo=FALSE}
 #Putting all the thematic changes to the plot in a list:
 MySpecial <- list(  
   # move the x axis labels up top
@@ -451,7 +466,7 @@ ggplot(data = df.stress.all, aes(x = gender, y = value, group = variable)) +
                   nudge_x = -.45, 
                   direction = "y") +
   geom_text_repel(data = df.stress.all %>% filter(gender == "male"), 
-                  aes(label = paste0(variable, " : ", round(value*100, 2), "%")) , 
+                  aes(label = paste0(round(value*100, 2), "%")) , 
                   hjust = "right", 
                   fontface = "bold", 
                   size = 4, 
@@ -460,7 +475,7 @@ ggplot(data = df.stress.all, aes(x = gender, y = value, group = variable)) +
   MySpecial +
   labs(
     title = "Stress",
-    subtitle = "n = 700",
+    subtitle = "n = 770",
     caption = "comparing women and men"
   )
 
@@ -469,9 +484,48 @@ ggplot(data = df.stress.all, aes(x = gender, y = value, group = variable)) +
 ```
 
 
+***
+***
+
+<style>
+div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
+</style>
+<div class = "green">
+
+### Section 6 | Preliminary data visualizations: COVID relevant highlights
+
+</div>
+
+***
+***
+
+- 4.04 Not including bathrooms or kitchen, how many rooms does the house you live in have? `nb_room`
+
+- 4.06 Household members `hh_member_count` : `age_hh_member`, `age_hh_member_001`:`age_hh_member_014`
+
+- 5.02 In the last week, approximately with how many people besides those in your household did you spend more than 10 minutes in close contact with? `close_contact`
 
 
+```{r 6.01, fig.height=7, fig.width=10, echo=FALSE}
+df1 <- k.data %>% rename(index = "_index") %>% 
+  select(index, age, gender, region, acad, 
+         nb_room,
+         hh_member_count,
+         close_contact) %>%
+  mutate(age = as.numeric(age), nb_room = as.numeric(nb_room), hh_member_count = as.numeric(hh_member_count)) %>%
+  mutate(hh_member_count = hh_member_count + 1) %>%
+  mutate(age_hh_memb_i = 2021-age) %>%
+  full_join(k.data %>% rename(index = "_index") %>% 
+              mutate(age_hh_memb_000 = age_hh_memb) %>%
+              select(index, age_hh_memb_000, age_hh_memb_001:age_hh_memb_014) %>% 
+              mutate_if(is.character,as.numeric),
+            by = "index") %>%
+  filter(nb_room > 0) %>% filter(hh_member_count > 0) %>% filter(hh_member_count < 15) %>%
+  mutate(pers_per_room = hh_member_count/nb_room)
 
+hist(df1$pers_per_room)
+
+```
 
 
 
