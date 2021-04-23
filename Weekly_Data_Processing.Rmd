@@ -424,6 +424,29 @@ df.stress.all <- df.stress %>% group_by(gender) %>% summarize(
   p.ss.anxiety    = length(which(stress_anxiety %in% 
                                   c("modstress", "strongstress", "extrastress")))/length(stress_anxiety), .groups = "drop") %>%
   melt(id.vars = "gender")
+#Adding more presentable labels
+df.stress.all <- df.stress.all %>% mutate(label = case_when(
+  variable == "p.ss.delaywork" ~ "",
+  variable == "p.ss.career" ~ "",
+  variable == "" ~ "",
+  variable == "" ~ "",
+  variable == "" ~ "",
+  variable == "" ~ "",
+  variable == "" ~ "",
+  variable == "" ~ "",
+  variable == "" ~ "",
+  
+))
+
+
+mutate(Infections = case_when(
+    variable  == 'prev_hh_0_pos'     ~ "0",
+    variable  == 'prev_hh_1_pos'     ~ "1",
+    variable  == 'prev_hh_2_pos'     ~ "2",
+    variable  == 'prev_hh_3_pos'     ~ "3",
+    variable  == 'prev_hh_4plus_pos' ~ "4+"
+    ),
+
 ```
 
 - Plotting
