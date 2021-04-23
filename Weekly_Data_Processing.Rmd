@@ -86,12 +86,6 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 k.data <- read_xlsx(here("DATA_05_Impacts_of_Covid-19_on_Malagasy_STEM_-_latest_version_-_False_-_2021-04-22-14-19-13.xlsx"))
 ```
 
-- Previewing data
-
-```{r 1.02}
-kable(k.data, caption = "Table 1.02: Raw Data") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover"), font_size = 7) %>% scroll_box(width = "100%", height = "300px")
-```
 
 ***
 ***
@@ -426,26 +420,14 @@ df.stress.all <- df.stress %>% group_by(gender) %>% summarize(
   melt(id.vars = "gender")
 #Adding more presentable labels
 df.stress.all <- df.stress.all %>% mutate(label = case_when(
-  variable == "p.ss.delaywork" ~ "",
-  variable == "p.ss.career" ~ "",
-  variable == "" ~ "",
-  variable == "" ~ "",
-  variable == "" ~ "",
-  variable == "" ~ "",
-  variable == "" ~ "",
-  variable == "" ~ "",
-  variable == "" ~ "",
-  
-))
-
-
-mutate(Infections = case_when(
-    variable  == 'prev_hh_0_pos'     ~ "0",
-    variable  == 'prev_hh_1_pos'     ~ "1",
-    variable  == 'prev_hh_2_pos'     ~ "2",
-    variable  == 'prev_hh_3_pos'     ~ "3",
-    variable  == 'prev_hh_4plus_pos' ~ "4+"
-    ),
+  variable == "p.ss.delaywork"  ~ "Interruptions/delays at work",
+  variable == "p.ss.career"     ~ "Future career plans",
+  variable == "p.ss.burden"     ~ "Burden of household work",
+  variable == "p.ss.relation"   ~ "Personal relationships",
+  variable == "p.ss.moneyemplo" ~ "Money/financial responsibilities",
+  variable == "p.ss.pershealth" ~ "Personal health",
+  variable == "p.ss.healthfam"  ~ "Health of family members",
+  variable == "p.ss.anxiety"    ~ "Anxiety or social stress"))
 
 ```
 
@@ -478,31 +460,28 @@ MySpecial <- list(
 )
 
 
+#Manually change the sample size in the subtitle
 ggplot(data = df.stress.all, aes(x = gender, y = value, group = variable)) +
   geom_line(aes(color = variable, alpha = 1), size = 1) +
   geom_point(aes(color = variable, alpha = 1), size = 3) +
   geom_text_repel(data = df.stress.all %>% filter(gender == "female"), 
-                  aes(label = paste0(variable, " : ", round(value*100, 2), "%")) , 
-                  hjust = "left", 
-                  fontface = "bold", 
+                  aes(label = paste0(label, " : ", round(value*100, 2), "%")) , 
+                  hjust = "right", 
                   size = 4, 
                   nudge_x = -.45, 
                   direction = "y") +
   geom_text_repel(data = df.stress.all %>% filter(gender == "male"), 
                   aes(label = paste0(round(value*100, 2), "%")) , 
                   hjust = "right", 
-                  fontface = "bold", 
                   size = 4, 
                   nudge_x = .5, 
                   direction = "y") +
   MySpecial +
   labs(
-    title = "Stress",
+    title    = "Percent of respondents reporting moderate or greater stress related to:",
     subtitle = "n = 770",
-    caption = "comparing women and men"
+    caption  = "Madagascar STEM students and professionals"
   )
-
-
 
 ```
 
@@ -515,39 +494,102 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 </style>
 <div class = "green">
 
-### Section 6 | Preliminary data visualizations: COVID relevant highlights
+### Section 6 | Preliminary data visualizations: Household and contact patterns
 
 </div>
 
 ***
 ***
 
-- 4.04 Not including bathrooms or kitchen, how many rooms does the house you live in have? `nb_room`
+- Selected questions from the survey:
 
-- 4.06 Household members `hh_member_count` : `age_hh_member`, `age_hh_member_001`:`age_hh_member_014`
+  - 4.04 Not including bathrooms or kitchen, how many rooms does the house you live in have? `nb_room`
 
-- 5.02 In the last week, approximately with how many people besides those in your household did you spend more than 10 minutes in close contact with? `close_contact`
+  - 4.06 Household members `hh_member_count` : `age_hh_member`, `age_hh_member_001`:`age_hh_member_014`
 
+  - 5.02 In the last week, approximately with how many people besides those in your household did you spend more than 10 minutes in close contact with? `close_contact`
+
+(Preparing the data for plotting)
 
 ```{r 6.01, fig.height=7, fig.width=10, echo=FALSE}
-df1 <- k.data %>% rename(index = "_index") %>% 
+#Renaming the index column (to use for joining later)
+df.hhc <- k.data %>% rename(index = "_index") %>% 
+  #Selecting relevant columns
   select(index, age, gender, region, acad, 
          nb_room,
          hh_member_count,
          close_contact) %>%
+  #Converting columns to numeric
   mutate(age = as.numeric(age), nb_room = as.numeric(nb_room), hh_member_count = as.numeric(hh_member_count)) %>%
+  #Adding 1 to the hh size (to include the respondent + the other members of the household)
   mutate(hh_member_count = hh_member_count + 1) %>%
+  #Calculating approximate age of the respondent and storing as age_hh_memb_i
   mutate(age_hh_memb_i = 2021-age) %>%
+  #Using join to add the columns with ages of the other household members
+  #Doing separately so can convert all columns to numeric using mutate_if()
   full_join(k.data %>% rename(index = "_index") %>% 
+              #renaming the column with the age of the first other household member (the 2nd member of the household)
+              # age_hh_memb_000
               mutate(age_hh_memb_000 = age_hh_memb) %>%
               select(index, age_hh_memb_000, age_hh_memb_001:age_hh_memb_014) %>% 
               mutate_if(is.character,as.numeric),
             by = "index") %>%
+  #Subsetting to Antananarivo region Analamanga
+  filter(region == "analamang") %>%
+  #Removing illogical responses (e.g., 0 rooms in the house, negative number of hh members)
+  #(e.g. hh_member count > 14 because didn't record ages for more than 14 individuals)
   filter(nb_room > 0) %>% filter(hh_member_count > 0) %>% filter(hh_member_count < 15) %>%
-  mutate(pers_per_room = hh_member_count/nb_room)
+  #Calculating the number of people per room in houses
+  mutate(pers_per_room = hh_member_count/nb_room) %>%
+  #Determining which records have full household age data and removing incomplete records
+  mutate(cols_w_age = 1 + rowSums(!is.na(select(., age_hh_memb_000:age_hh_memb_014))),
+         hh_diff = hh_member_count - cols_w_age) %>%
+  #Removing households that did not report the age of each member
+  filter(hh_diff < 1) %>%
+  #Calculating the age of eldest individual
+  rowwise() %>% mutate(max_age = max(c(age_hh_memb_i, 
+                                       age_hh_memb_000, age_hh_memb_001, age_hh_memb_002, age_hh_memb_003,
+                                       age_hh_memb_004, age_hh_memb_005, age_hh_memb_006, age_hh_memb_006,
+                                       age_hh_memb_007, age_hh_memb_008, age_hh_memb_009, age_hh_memb_010,
+                                       age_hh_memb_011, age_hh_memb_012, age_hh_memb_013, age_hh_memb_014),
+                                     na.rm = TRUE)) %>% ungroup() %>%
+  #Ordering by household size and age of eldest
+  arrange(hh_member_count, max_age) %>%
+  #Giving a rank for plotting (index_hh) that restarts at 1 for each household size
+  group_by(hh_member_count) %>% mutate(index_hh = 1:length(index)) %>% ungroup() %>%
+  #Melting so each individual is on a row
+  melt(id.vars = c("index", "index_hh", "age", "gender", "region", "acad", "nb_room", "hh_member_count", "close_contact",
+                   "pers_per_room", "cols_w_age", "hh_diff", "max_age")) %>%
+  #For plotting with a different color, adding a marker for individuals over 65
+  mutate(old = as.factor(ifelse(max_age > 64, 1, 0))) %>%
+  #Deleting rows with incomplete data
+  drop_na()
+```
 
-hist(df1$pers_per_room)
+(plotting the household size distribution)
 
+```{r 6.02, fig.height=7, fig.width=10, echo=FALSE}
+#Highlighting households with individuals over 65
+df.hhc %>% ggplot(aes(x = value, y = index_hh, color = old)) +
+  geom_point() +
+  #Separating each household size
+  facet_grid(~ hh_member_count, scales = "fixed") +
+  xlab("Age of household members") + ylab("Household") +
+  scale_color_manual(values=c("black", "#c51162")) +
+  theme_bw() +
+  scale_y_continuous(breaks = c(1:88)) +
+  rremove("y.text") + rremove("legend")
+```
+
+(plotting the histogram of the number of individuals per room)
+
+```{r 6.03, fig.height=7, fig.width=10, echo=FALSE}
+#Keeping the pers_per_room from the melted df.hhc
+df.hhc %>% group_by(index) %>% summarize(pers_per_room = max(pers_per_room), .groups = "drop") %>%
+  ggplot(aes(x = pers_per_room)) +
+  geom_histogram(binwidth=1, fill = "#00695c") + 
+  xlab("Number of individuals per room in the house \n (excluding bathrooms and kitchen)") +
+  ylab("Count") + theme_bw()
 ```
 
 
