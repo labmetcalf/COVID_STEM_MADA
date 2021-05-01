@@ -79,12 +79,14 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
     - Export type `XLS`
     - Value and header format `XML values and headers`
     - `Advanced options`: Select `Include fields from all 32 deployed versions`
-      - Note this will include a series of columns at the end corresponding to changed questions
+      - Note this will include a series of columns at the far end corresponding to changed questions
+      - Note: Manually delete the "other_info" column
+        - This column contains a free text response from respondents; deleted in case there is personal info within
   - Manually uploading to [the GitHub repository for this project](https://github.com/labmetcalf/COVID_STEM_MADA)
 - Data file name should include the date at which data was downloaded
 
 ```{r 1.01}
-k.data <- read_xlsx(here("DATA_05_Impacts_of_Covid-19_on_Malagasy_STEM_-_latest_version_-_False_-_2021-04-22-14-19-13.xlsx"))
+k.data <- read_xlsx(here("DATA_07_Impacts_of_Covid-19_on_Malagasy_STEM_-_all_versions_-_False_-_2021-05-01-13-20-40.xlsx"))
 ```
 
 
@@ -216,7 +218,7 @@ paste0("Number of surveys completed, male  = ",
 paste0("Number of surveys completed, nonbinary gender = ", 
        length(k.data$agreement[!is.na(k.data$gender) & k.data$gender == "other_notsay"]))
 paste0("Average number of surveys performed per day of sampling = ",
-       length(k.data$agreement[k.data$agreement == "yes"])/length(unique(k.data$today)))
+       round(length(k.data$agreement[k.data$agreement == "yes"])/length(unique(k.data$today)), 2))
 ```
 
 - Summary of sampling progress, time series plot:
@@ -233,8 +235,11 @@ p.gender_summary2 <- k.data %>% drop_na(gender) %>% select(agreement, today, gen
   count(gender) %>% ungroup() %>%
   ggplot(aes(x = today, y = n, fill = gender)) +
   geom_bar(stat='identity', width=0.8) +
-  xlab("Date") + labs(subtitle = "Sampling by day and gender") +
-  scale_fill_viridis_d() +
+  xlab("Date") + 
+  labs(subtitle = "Sampling by day and gender",
+       fill = "") +
+  scale_fill_manual(values  = c("#46055E", "#468D8A", "#F2DE24"), 
+                     labels = c("Female", "Male", "Prefer not to say\nor nonbinary")) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
         legend.position = "right")
@@ -274,93 +279,88 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 ***
 ***
 
-Plotting research activity affects by gender
+Plotting research activity effects by gender:
+
 ```{r 4.01, echo = FALSE}
-p.301a <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
-  filter(gender != "other_notsay") %>% 
+d.rae <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
+  filter(gender != "other_notsay")
+
+p.rae.fieldNA <- d.rae %>% 
   group_by(gender) %>% count(fieldwork_affect) %>% ungroup() %>%
   mutate(fieldwork_affect = factor(fieldwork_affect, 
                                    levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
   ggplot(aes(x = gender, y = n, fill = fieldwork_affect)) +
   geom_bar(position="fill", stat='identity', width=0.8) +
-  labs(subtitle = "Affects on fieldwork by gender (with NAs)") + xlab("Sex") + ylab("Proportion") +
+  labs(subtitle = "Affects on fieldwork by gender (with NAs)") + 
+  xlab("Sex") + ylab("Proportion") +
   scale_fill_viridis_d() +
   theme_bw() +
   theme(legend.position = "right")
 
-p.301b <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
-  filter(gender != "other_notsay") %>% 
+p.rae.writeNA <- d.rae %>% 
   group_by(gender) %>% count(writ_affect) %>% ungroup() %>%
   mutate(writ_affect = factor(writ_affect, 
                               levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
   ggplot(aes(x = gender, y = n, fill = writ_affect)) +
   geom_bar(position="fill", stat='identity', width=0.8) +
-  labs(subtitle = "Affects on writing by gender (with NAs)") + xlab("Sex") + ylab("Proportion") +
+  labs(subtitle = "Affects on writing by gender (with NAs)") + 
+  xlab("Sex") + ylab("Proportion") +
   scale_fill_viridis_d() +
   theme_bw() +
   theme(legend.position = "right")
 
-p.301c <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
-  filter(gender != "other_notsay") %>% 
-  group_by(gender) %>% count(fieldwork_affect) %>% ungroup() %>%
-  mutate(fieldwork_affect = factor(fieldwork_affect, 
-                                   levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
-  filter(fieldwork_affect != "na") %>%
-  ggplot(aes(x = gender, y = n, fill = fieldwork_affect)) +
-  geom_bar(position="fill", stat='identity', width=0.8) +
-  labs(subtitle = "Impacts on fieldwork by gender\n(among applicable respondents)") + 
-  xlab("Gender") + ylab("Proportion") +
-  scale_fill_viridis_d(option = "inferno", direction = -1, name = "Impact: ", 
-                       labels = c("Strong", "Moderate", "Slight", "None")) +
-  theme_bw() +
-  theme(legend.position = "top", legend.title = element_text(size = 5), legend.text = element_text(size = 5))
-
-p.301d <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
-  filter(gender != "other_notsay") %>% 
-  group_by(gender) %>% count(writ_affect) %>% ungroup() %>%
-  mutate(writ_affect = factor(writ_affect, 
-                                   levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
-  filter(writ_affect != "na") %>%
-  ggplot(aes(x = gender, y = n, fill = writ_affect)) +
-  geom_bar(position="fill", stat='identity', width=0.8) +
-  labs(subtitle = "Impacts on writing by gender\n(among applicable respondents)") + 
-  xlab("Gender") + ylab("Proportion") +
-  scale_fill_viridis_d(option = "inferno", direction = -1, name = "Impact: ", 
-                       labels = c("Strong", "Moderate", "Slight", "None")) +
-  theme_bw() +
-  theme(legend.position = "top", legend.title = element_text(size = 5), legend.text = element_text(size = 5))
-
-
-p.301e <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
-  filter(gender != "other_notsay") %>% 
-  group_by(gender) %>% count(data_affect) %>% ungroup() %>%
-  mutate(data_affect = factor(data_affect, 
-                                   levels = rev(c("na", "nochangeaffect", "slightaffect", "modaffect", "veryaffect")))) %>%
-  filter(data_affect != "na") %>%
-  ggplot(aes(x = gender, y = n, fill = data_affect)) +
-  geom_bar(position="fill", stat='identity', width=0.8) +
-  labs(subtitle = "Impacts on data analysis by gender\n(among applicable respondents)") +
-  xlab("Gender") + ylab("Proportion") +
-  scale_fill_viridis_d(option = "inferno", direction = -1, name = "Impact: ", 
-                       labels = c("Strong", "Moderate", "Slight", "None")) +
-  theme_bw() +
-  theme(legend.position = "top", legend.title = element_text(size = 5), legend.text = element_text(size = 5))
-
 ```
-
 
 **Figure 4.02** Impacts of COVID-19 disruptions on fieldwork and writing by gender (including those that responded "not applicable")
 ```{r 4.02, fig.height=7, fig.width=10, echo=FALSE}
-grid.arrange(p.301a, p.301b, nrow = 1)
+grid.arrange(p.rae.fieldNA, p.rae.writeNA, nrow = 1)
+```
+
+- Writing a function to create the plot for a desired research activity (e.g., `fieldwork_affect`)
+
+```{r 4.02, echo = FALSE}
+f.plot.res_act <- function(dataset, activity, activity_name){
+
+  d.res_act <- dataset %>% select(gender, activity) %>% drop_na(gender) %>% filter(gender != "other_notsay")
+  names(d.res_act) <- c("gender", "selected_activity")
+  d.res_act <- d.res_act %>% group_by(gender) %>% count(selected_activity) %>% ungroup() %>%
+    mutate(selected_activity = factor(selected_activity, 
+                                      levels = rev(c("na", 
+                                                     "nochangeaffect", 
+                                                     "slightaffect", 
+                                                     "modaffect",
+                                                     "veryaffect")))) %>%
+    filter(selected_activity != "na")
+
+  p.res_act <- d.res_act %>% ggplot(aes(x = gender, y = n, fill = selected_activity)) +
+    geom_bar(position="fill", stat='identity', width=0.8) +
+    labs(title = activity_name,
+         subtitle = paste0("Impact by gender among\napplicable respondents\n", "n = ", sum(d.res_act$n))) +
+    xlab("Gender") + ylab("Proportion") +
+    scale_fill_viridis_d(option = "inferno", direction = -1, name = "Impact: ", 
+                         labels = c("Strong", "Moderate", "Slight", "None")) +
+    theme_bw() +
+    theme(#legend.position = "bottom", 
+          legend.position = "none",
+          legend.title = element_text(size = 5), 
+          legend.text = element_text(size = 5))
+  
+  return(p.res_act)
+}
 ```
 
 
 **Figure 4.03 Impacts of COVID-19 disruptions on fieldwork, writing, and data analysis activity among Malagasy STEM by gender**
 (for those respondents identifying these as applicable activities for their work or studies)
 
-```{r 4.03, fig.height=7, fig.width=10, echo=FALSE}
-grid.arrange(p.301c, p.301d, p.301e, nrow = 1)
+```{r 4.03, echo = FALSE}
+p.rae.field <- f.plot.res_act(dataset = k.data, activity = "fieldwork_affect", activity_name <- "Fieldwork")
+p.rae.write <- f.plot.res_act(dataset = k.data, activity = "writ_affect",      activity_name <- "Writing")
+p.rae.datan <- f.plot.res_act(dataset = k.data, activity = "data_affect",      activity_name <- "Data Analysis")
+
+grid.arrange(p.rae.field, p.rae.write, p.rae.datan, nrow = 1)
 ```
+
 
 
 
@@ -429,7 +429,6 @@ df.stress.all <- df.stress.all %>% mutate(label = case_when(
   variable == "p.ss.pershealth" ~ "Personal health",
   variable == "p.ss.healthfam"  ~ "Health of family members",
   variable == "p.ss.anxiety"    ~ "Anxiety or social stress"))
-
 ```
 
 - Plotting
@@ -460,30 +459,30 @@ MySpecial <- list(
   theme(plot.subtitle    = element_text(hjust = 0.5))
 )
 
-
-#Manually change the sample size in the subtitle
-ggplot(data = df.stress.all, aes(x = gender, y = value, group = variable)) +
+p.rs <- ggplot(data = df.stress.all, aes(x = gender, y = value, group = variable)) +
   geom_line(aes(color = variable, alpha = 1), size = 1) +
   geom_point(aes(color = variable, alpha = 1), size = 3) +
   geom_text_repel(data = df.stress.all %>% filter(gender == "female"), 
                   aes(label = paste0(label, " : ", round(value*100, 2), "%")) , 
                   hjust = "right", 
-                  size = 4, 
+                  size = 3, 
                   nudge_x = -.45, 
                   direction = "y") +
   geom_text_repel(data = df.stress.all %>% filter(gender == "male"), 
                   aes(label = paste0(round(value*100, 2), "%")) , 
                   hjust = "right", 
-                  size = 4, 
+                  size = 3, 
                   nudge_x = .5, 
                   direction = "y") +
   MySpecial +
   labs(
     title    = "Percent of respondents reporting moderate or greater stress related to:",
-    subtitle = "n = 770",
+    ##Storing sample size as a variable to use in the caption to the plot below
+    subtitle = paste0("n = ", length(df.stress$age)),
     caption  = "Madagascar STEM students and professionals"
   )
 
+p.rs
 ```
 
 
@@ -513,7 +512,8 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 (Preparing the data for plotting)
 
 ```{r 6.01, fig.height=7, fig.width=10, echo=FALSE}
-#Renaming the index column (to use for joining later)
+#Renaming the index column (the integers counting up assigned to each submission/respondent in Kobo)
+# (to use for joining later)
 df.hhc <- k.data %>% rename(index = "_index") %>% 
   #Selecting relevant columns
   select(index, age, gender, region, acad, 
@@ -526,14 +526,14 @@ df.hhc <- k.data %>% rename(index = "_index") %>%
   mutate(hh_member_count = hh_member_count + 1) %>%
   #Calculating approximate age of the respondent and storing as age_hh_memb_i
   mutate(age_hh_memb_i = 2021-age) %>%
-  #Using join to add the columns with ages of the other household members
+  #Using join to add the columns containing ages of the other household members
   #Doing separately so can convert all columns to numeric using mutate_if()
   full_join(k.data %>% rename(index = "_index") %>% 
               #renaming the column with the age of the first other household member (the 2nd member of the household)
               # age_hh_memb_000
               mutate(age_hh_memb_000 = age_hh_memb) %>%
               select(index, age_hh_memb_000, age_hh_memb_001:age_hh_memb_014) %>% 
-              mutate_if(is.character,as.numeric),
+              mutate_if(is.character, as.numeric),
             by = "index") %>%
   #Subsetting to Antananarivo region Analamanga
   filter(region == "analamang") %>%
@@ -561,7 +561,7 @@ df.hhc <- k.data %>% rename(index = "_index") %>%
   #Melting so each individual is on a row
   melt(id.vars = c("index", "index_hh", "age", "gender", "region", "acad", "nb_room", "hh_member_count", "close_contact",
                    "pers_per_room", "cols_w_age", "hh_diff", "max_age")) %>%
-  #For plotting with a different color, adding a marker for individuals over 65
+  #For plotting with a different color, adding a marker for individuals 65 and older
   mutate(old = as.factor(ifelse(max_age > 64, 1, 0))) %>%
   #Deleting rows with incomplete data
   drop_na()
@@ -571,15 +571,25 @@ df.hhc <- k.data %>% rename(index = "_index") %>%
 
 ```{r 6.02, fig.height=7, fig.width=10, echo=FALSE}
 #Highlighting households with individuals over 65
-df.hhc %>% ggplot(aes(x = value, y = index_hh, color = old)) +
+p.hhc <- df.hhc %>% ggplot(aes(x = value, y = index_hh, color = old)) +
   geom_point() +
   #Separating each household size
   facet_grid(~ hh_member_count, scales = "fixed") +
   xlab("Age of household members") + ylab("Household") +
-  scale_color_manual(values=c("black", "#c51162")) +
+  scale_color_manual(values = c("black", "#c51162"), 
+                     labels = c("Housholds with 0 individuals > 65   ", "Households with 1+ individual > 65")) +
   theme_bw() +
-  scale_y_continuous(breaks = c(1:88)) +
-  rremove("y.text") + rremove("legend")
+  scale_y_continuous(breaks = c(1:max(df.hhc$index_hh)+1)) +
+  rremove("y.text") +
+  labs(
+    title    = "Age distribution of households in Analamanga region, Madagascar",
+    subtitle = paste0("n = ", length(unique(df.hhc$index)), " households",
+                      "\nSeparated into panels by household size; Each row shows one household of the specified size"),
+    caption  = "Households containing Madagascar STEM student or professional",
+    color = "") + 
+  theme(legend.position = "top")
+
+p.hhc
 ```
 
 (plotting the histogram of the number of individuals per room)
