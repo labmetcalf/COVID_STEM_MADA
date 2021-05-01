@@ -105,90 +105,234 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 ***
 ***
 
-- Cleaning up "other" responses for:
-  - field of study (`other_field`)
-  - academic stage / position (`other_acad`)
-  - type of institution (`other_inst`)
-  - challenges  to attend online opportunities (`other_challenge_opport`)
+#### Section 2.1 | Cleaning up "other" responses
+
+Questions with "other" responses:
+
+1. Field of study (`other_field`)
+2. Academic stage / position (`other_acad`)
+3. Type of institution (`other_inst`)
+4. Challenges to attend online opportunities (`other_challenge_opport`)T
   
 - Changing text responses by hardcoding following the tables below
 
-**Field of study**
+***
+
+**1. Field of study**
 
 - Listing other responses
 
 ```{r 2.01.1, echo = FALSE}
-paste0("Number of other responses: ", length(unique(k.data$other_field)) - 1)
-unique(k.data$other_field[!is.na(k.data$other_field)])
+paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_field))) - 1)
+unique(tolower(k.data$other_field[!is.na(k.data$other_field)]))
 ```
 
-- Notes:
-  - Agronomic Sciences and Agriculture & Natural Resources can probably be combined
+##### Original options and cleaned groupings:
 
-| Num | raw response text                                   | cleaned text                                     |
-| --- | --------------------------------------------------- | ------------------------------------------------ |
-| 01  | "HYDROSCIENCES"                                     | "Atmospheric Sciences, Earth and Ocean Sciences" |
-| 02  | "Sciences Agronomiques"                             | "Agronomic Sciences"                             |
-| 03  | "Sciences agronomiques"                             | "Agronomic Sciences"                             |
-| 04  | "sciences agronomiques"                             | "Agronomic Sciences"                             |
-| 05  | "SCIENCES AGRONOMIQUES"                             | "Agronomic Sciences"                             |
-| 06  | "Pharmacologie"                                     | "Pharmacology, Physiology & Cosmetology"         |
-| 07  | "pharmacologie"                                     | "Pharmacology, Physiology & Cosmetology"         |
-| 08  | "Pharmacology"                                      | "Pharmacology, Physiology & Cosmetology"         |
-| 09  | "Pharmacologie et Cosmétologie"                     | "Pharmacology, Physiology & Cosmetology"         |
-| 10  | "PHARMACOLOGIE"                                     | "Pharmacology, Physiology & Cosmetology"         |
-| 11  | "Pharmarmacologie, cosmetic"                        | "Pharmacology, Physiology & Cosmetology"         |
-| 12  | "Nutrition"                                         | "Health Sciences"                                |
-| 13  | "Sciences et technique nucleaires"                  | "Physics"                                        |
-| 14  | "Sciences nucleaires, physiques, nanotechnologie"   | "Physics"                                        |
-| 15  | "Sciences et techniques nucléaires"                 | "Physics"                                        |
-| 16  | "Sciences techniques nucleaires et nanotechnologie" | "Physics"                                        |
-| 17  | "Ecotourism science"                                | "Agriculture & Natural Resources"                |
-| 18  | "Paléontologie"                                     | "Biological Sciences"                            |
+| code                   | full text                                   | field_cleaned                       |
+| ---------------------- | ------------------------------------------- | ----------------------------------- |
+| agri_natres            | Agriculture & Natural Resources             | Agriculture & Natural Resources     |
+| agro                   | Agronomic Sciences                          | Agriculture & Natural Resources     |
+| astro	                 | Astronomy & Astrophysics                    | Physical Sciences                   |
+| atmo_earth_ocean       | Atmospheric, Earth & Ocean Sciences         | Atmospheric, Earth & Ocean Sciences |
+| biochem_cell_mol_biolo | Biochemistry, Cellular & Molecular Biology  | Biological Sciences                 |
+| bio_sci                | Biological Sciences                         | Biological Sciences                 |
+| chem_chemeng           | Chemistry & Chemical Engineering            | Physical Sciences                   |
+| clinicsci              | Clinical Sciences                           | Clinical & Health Sciences          |
+| comp_scien             | Computer Science                            | Computer Science                    |
+| eletc_mech             | Electrical & Mechanical Engineering         | Engineering Sciences                |
+| enviro                 | Environmental Science                       | Environmental Sciences              |
+| health_sci             | Health Sciences                             | Clinical & Health Sciences          |
+| math_stat              | Mathematics & Statistics                    | Mathematics & Statistics            |
+| pharm_cosmet           | Pharmacology, Physiology & Cosmetology      | Clinical & Health Sciences          |
+| physic                 | Physics                                     | Physical Sciences                   |
+| other_eng	             | Other Engineering Sciences                  | Engineering Sciences                |
+| nonstem                | Non-STEM field                              | Non-STEM                            |
 
-```{r 2.01.1, echo = FALSE}
-#Replacing other responses with standard text
-#k.data <- k.data %>% mutate(field = recode(ifesle(field == "Sciences et technique nucleaires", "Physics", NA)) 
+##### Cleaned codes
 
-#mutate(sex=recode(sex, 
-#                         `1`="Male",
-#                         `2`="Female"))
+| code                   | code_cleaned | field_cleaned                       |
+| ---------------------- | ------------ | ----------------------------------- |
+| agri_natres            | agro_sci     | Agriculture & Natural Resources     |
+| agro                   | agro_sci     | Agriculture & Natural Resources     |
+| comp_scien             | comp_sci     | Computer Science                    |
+| atmo_earth_ocean       | earth_sci    | Atmospheric, Earth & Ocean Sciences |
+| eletc_mech             | engi_sci     | Engineering Sciences                |
+| other_eng	             | engi_sci     | Engineering Sciences                |
+| enviro                 | env_sci      | Environmental Sciences              |
+| health_sci             | health_sci   | Clinical & Health Sciences          |
+| pharm_cosmet           | health_sci   | Clinical & Health Sciences          |
+| clinicsci              | health_sci   | Clinical & Health Sciences          |
+| biochem_cell_mol_biolo | life_sci     | Biological Sciences                 |
+| bio_sci                | life_sci     | Biological Sciences                 |
+| math_stat              | math_stats   | Mathematics & Statistics            |
+| astro	                 | phys_sci     | Physical Sciences                   |
+| chem_chemeng           | phys_sci     | Physical Sciences                   |
+| physic                 | phys_sci     | Physical Sciences                   |
+| nonstem                | non_stem     | Non-STEM                            |
+
+```{r 2.01.2, echo = FALSE}
+#Replacing other responses with code from original options
+k.data <- k.data %>% mutate(other_field = tolower(other_field)) %>%
+  mutate(other_field = recode(other_field,
+    "géologie" = "atmo_earth_ocean",
+    "hydrosciences" = "atmo_earth_ocean",
+    "sciences agronomiques" = "agri_natres",
+    "pharmacologie" = "health_sci",
+    "pharmacology" = "health_sci",
+    "pharmacologie et cosmétologie" = "health_sci",
+    "nutrition" = "health_sci",
+    "pharmarmacologie, cosmetic" = "health_sci",
+    "sciences et technique nucleaires" = "physic",
+    "sciences nucleaires, physiques, nanotechnologie" = "physic",
+    "sciences et techniques nucléaires" = "physic",
+    "sciences techniques nucleaires et nanotechnologie" = "physic",
+    "ecotourism science" = "enviro",
+    "paléontologie" = "bio_sci",
+    "science et technologie" = "comp_sci",
+    "paleontology" = "bio_sci",
+    "marine biology" = "bio_sci",
+    "administration" = "nonstem",
+    "marine science" = "atmo_earth_ocean",
+    "animal health sciences" = "bio_sci",
+    "etudes envionnementales en général" = "enviro",
+    "zoology" = "bio_sci",
+    "entomologie" = "bio_sci",
+    "physique nucléaire" = "physic",
+    "sciences de l'environnement et du développement durable" = "enviro",
+    "économie de la santé" = "health_sci",
+    "science de la nature et de l'ecosystème" = "enviro",
+    "géographie" = "atmo_earth_ocean",
+    "science de la terre" = "atmo_earth_ocean"
+    ))
+```
+
+***
+
+**2. Academic stage / position**
+
+
+- Listing other responses
+
+```{r 2.02.1, echo = FALSE}
+paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_acad))) - 1)
+unique(tolower(k.data$other_acad[!is.na(k.data$other_acad)]))
 ```
 
 
-**Academic stage / position**
-
-Listing other responses
-```{r 2.02, echo = FALSE}
-paste0("Number of other responses: ", length(unique(k.data$other_acad)) - 1)
-unique(k.data$other_acad[!is.na(k.data$other_acad)])
-```
 - Notes:
   - What is the difference between Consultant, Independent researcher, and Research officer?
   - Research assistant should be changed to Research assistant or technician
   - Add "Principal investigator" or "Research group leader" to Professor etc
   - Need to check respondent's responses to other questions for some to see what level they are at
 
-| Num | raw response text                        | cleaned text                                          |
-| --- | ---------------------------------------- | ----------------------------------------------------- |
-| 01  | "Cadre dans une Entreprise"              | ???                                                   |
-| 02  | "Enseignant-chercher (vacataire)"        | ???                                                   |
-| 03  | "Technicien de laboratoire"              | "Research assistant"                                  |
-| 04  | "Enseignant vacataire,   consultant"     | "Consultant"                                          |
-| 05  | "Médecin"                                | ??? Post doctoral researcher?                         |
-| 06  | "I am recently graduated and would ..."* | ???                                                   |
-| 07  | "Medicin"                                | ??? Post doctoral researcher?                         |
-| 08  | "Professeur"                             | "Faculty member, Professor, or University Instructor" |
-| 09  | "etudiante en licence"                   | ??? Should they be eligible?                          |
-| 10  | "Directeur Général"                      | "Faculty member, Professor, or University Instructor" |
-| 11  | "Président GERP"                         | "Faculty member, Professor, or University Instructor" |
-| 12  | "Fonctionnaire de l'état"                | ???                                                   |
-| 13  | "Professeur titulaire"                   | "Faculty member, Professor, or University Instructor" |
-| 14  | "CLO Multidisciplinaire"                 | ???                                                   |
-| 15  | "Formation spécialisée"                  | ???                                                   |
+##### Original options and cleaned groupings:
+
+| code                   | full text                                           | field_cleaned                  |
+| ---------------------- | --------------------------------------------------- | ------------------------------ |
+| master_student         | Master's student                                    | Masters student                |
+| masterstud             | Master's student                                    | Masters student                |
+| phdcandidate_student   | PhD candidate or student                            | PhD student                    |
+| phd_stud               | PhD candidate or student                            | PhD student                    |
+| postgrad               | Post-graduate student                               | Postgraduate student           |
+| postdoc                | Postdoctoral researcher                             | Postdoc                        |
+| research_assist        | Research assistant                                  | Research assistant or tech     |
+| instructor             | Faculty member, Professor, or University Instructor | Faculty, PI, or senior level   |
+| consult                | Consultant                                          | Independent or staff scientist |
+| research_officer       | Research officer                                    | Independent or staff scientist |
+| independent_researcher | Independent researcher                              | Independent or staff scientist |
+| retired_scientist      | Retired scientist (No longer engaged in research)   | Retired scientist              |
+
+##### Cleaned codes
+
+| code                   | code_cleaned |                                 |
+| ---------------------- | -------------|-------------------------------- |
+| master_student         | student_ms   | Masters student                 |
+| masterstud             | student_ms   | Masters student                 |
+| phdcandidate_student   | student_phd  | PhD student                     |
+| phd_stud               | student_phd  | PhD student                     |
+| postgrad               | postgrad     | Postgraduate student            |
+| postdoc                | postdoc      | Postdoc                         |
+| research_assist        | ra_tech      | Research assistant or tech      |
+| instructor             | senior_pi    | Faculty, PI, or senior level    |
+| consult                | staff_res    | Independent or staff researcher |
+| research_officer       | staff_res    | Independent or staff researcher |
+| independent_researcher | staff_res    | Independent or staff researcher |
+| retired_scientist      | ret_sci      | Retired scientist               |
 
 
-
+```{r 2.02.2, echo = FALSE}
+#Replacing other responses with code from original options
+k.data <- k.data %>% mutate(other_acad = tolower(other_acad)) %>%
+  mutate(other_acad = recode(other_acad,
+    "assistant d'enseignement supérieur" = "research_assist",
+    "ingénieur de maintenance" = "research_officer",
+    "cadre dans une entreprise" = "",
+    "enseignant-chercher (vacataire)" = "",
+    "technicien de laboratoire" = "research_assist",
+    "enseignant vacataire,consultant" = "",
+    "médecin" = "",
+    "i am recently graduated and would like to wait a while before continuing my study" = "postgrad",
+    "medicin" = "",
+    "professeur" = "instructor",
+    "etudiante en licence"  = "",
+    "directeur général"  = "instructor",
+    "gestionnaire de site aires protégées marine" = "",
+    "président gerp"  = "instructor",
+    "fonctionnaire de l'état"  = "",
+    "professeur titulaire"  = "instructor",
+    "clo multidisciplinaire" = "",
+    "formation spécialisée" = "research_officer",
+    "gestionnaire aire protégée"  = "",
+    "coordinatrice d'étude clinique" = "research_officer",
+    "socio-organisateur dans ong blue ventures"  = "research_officer",
+    "chercheur biologiste"  = "research_officer",
+    "travailleur"  = "",
+    "monitoring and evaluation" = "research_officer",
+    "suivi évaluation" = "research_officer",
+    "cco  (biologiste preleveur)" = "",
+    "chef de volet conservation"  = "",
+    "administration (asity) et responsable de formation"  = "research_officer",
+    "coordinateur de projet" = "research_officer",
+    "chargé d'études environnementales" = "research_officer",
+    "coordinatrice de projet"  = "research_officer",
+    "master ii" = "master_student",
+    "chercheur, chef d'unité"  = "instructor",
+    "practitioner in marine conservation"  = "research_officer",
+    "travailleurs" = "",
+    "thesard doctorat d'exercice" = "",
+    "responsable technique" = "",
+    "secrétaire de direction"  = "research_officer",
+    "chef service administratif et financier" = "",
+    "secrétaire" = "",
+    "technicienne de surface"  = "research_assist",
+    "responsable environnement" = "",
+    "chef de projet dans la conservation"  = "",
+    "responsable ictc" = "",
+    "en recherche de finacement"  = "",
+    "i still study at the undergraduate level" = "",
+    "recently graduate"  = "postgrad",
+    "ministre"  = "instructor",
+    "manager en éducation environnementale" = "",
+    "en cours de preparation de l'inscription au doctorat" = "postgrad",
+    "aucun"  = "",
+    "directeur du parc"  = "instructor",
+    "directeur" = "instructor",
+    "salariée"  = "",
+    "enseignant vacataire"  = "",
+    "enseignant vacataire-informaticien" = "",
+    "responsable laborat" = "",
+    "responsable d'hygiène" = "",
+    "enseignante vacataire" = "",
+    "entrepreneur" = "consult",
+    "responsable production et environnement" = "",
+    "respo admin personnel et juridique" = "",
+    "cadre dans un projet de développement" = "",
+    "technicien de production" = "research_assist",
+    "graduate" = "postgrad"
+    ))
+    
+```
 ***
 ***
 
