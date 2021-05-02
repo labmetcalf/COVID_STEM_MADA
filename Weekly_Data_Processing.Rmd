@@ -244,7 +244,7 @@ unique(tolower(k.data$other_acad[!is.na(k.data$other_acad)]))
 | master_student         | student_ms   | Masters Student              |
 | masterstud             | student_ms   | Masters Student              |
 | phdcandidate_student   | student_phd  | PhD Student                  |
-| phd_stud               | student_phd  | PhD Student                  |
+| pdhstud                | student_phd  | PhD Student                  |
 | postgrad               | postgrad     | Postgraduate Student         |
 | postdoc                | postdoc      | Postdoc                      |
 | research_assist        | ra_tech      | Research Assistant or Tech   |
@@ -337,7 +337,7 @@ k.data <- k.data %>% filter(is.na(other_acad) | other_acad != "NA_not_eligible")
 
 **3. Type of institution**
 
-- Listing other responses
+##### Listing other responses
 
 ```{r 2.03.1, echo = FALSE}
 paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_inst))) - 1)
@@ -354,19 +354,6 @@ unique(tolower(k.data$other_inst[!is.na(k.data$other_inst)]))
 | lab          | Laboratory / Research center / Research group       | Research Institution |
 | priv_inst    | Private company                                     | Private Company      |
 | none         | None of the above                                   | Independent          |
-
-
-##### Cleaned codes
-
-| code         | code_cleaned | field_cleaned        |
-| ------------ | -------------|--------------------- |
-| univ         | inst_uni     | University           |
-| ngo          | inst_ngo     | NGO                  |
-| gov_pub_agen | inst_gov     | Governmental Agency  |
-| lab          | inst_lab     | Research Institution |
-| priv_inst    | inst_priv    | Private Company      |
-| none         | inst_none    | Independent          |
-
 
 ```{r 2.03.2, echo = FALSE}
 #Replacing other responses with code from original options
@@ -389,6 +376,66 @@ k.data <- k.data %>% mutate(other_inst = tolower(other_inst)) %>%
     ))
 ```
 
+##### Creating cleaned, standardized columns (1s and 0s for each option)
+
+##### Cleaned codes
+
+| code         | code_cleaned | field_cleaned        |
+| ------------ | -------------|--------------------- |
+| univ         | inst_uni     | University           |
+| ngo          | inst_ngo     | NGO                  |
+| gov_pub_agen | inst_gov     | Governmental Agency  |
+| lab          | inst_lab     | Research Institution |
+| priv_inst    | inst_priv    | Private Company      |
+| none         | inst_none    | Independent          |
+
+Criteria:
+
+***
+
+Type of instution = University `inst_uni`: 
+  1. selected institution as university (`inst/univ` == "1")
+  2. selected other institution but other response is university (`other_inst == "univ"`)
+  3. selected academic stage as masters or PhD student:
+    - (`acad/master_student` == "1" | `acad/masterstud` == "1" | `acad/phdcandidate_student` == "1" | `acad/pdhstud` == "1")
+    - Note that PhD student code was mispelled in original survey deployment: pdh not phd
+  4. Note for some February 5 surveys, the columns with 1s and 0s for each option did not automatically generate
+    - (`acad %in% c("master_student", "masterstud", "phdcandidate_student", "pdhstud")`) 
+
+***
+
+Type of institution = NGO `inst_ngo`: 
+  1. selected institution as ngo (`inst/ngo` == "1")
+  2. selected institution as association (`inst/assoc` == "1")
+  3. selected other institution but other response is ngo (`other_inst == "ngo"`)
+
+
+```{r 2.03.3, echo = FALSE}
+df1 <- k.data %>% select(inst:`inst/none`, other_inst)
+names(df1)
+str(df1)
+
+# 
+dfx <- k.data %>%
+  #inst_uni
+  mutate(inst_uni = case_when(
+    `inst/univ`                 == "1"    ~ 1,
+     other_inst                 == "univ" ~ 1,
+    `acad/master_student`       == "1"    ~ 1,
+    `acad/masterstud`           == "1"    ~ 1,
+    `acad/phdcandidate_student` == "1"    ~ 1,
+    `acad/pdhstud`              == "1"    ~ 1,
+     acad %in% c("master_student", "masterstud", "phdcandidate_student", "pdhstud") ~ 1,)) %>% 
+  #inst_ngo
+  mutate(inst_ngo = case_when(
+    `inst/ngo`   == "1"   ~ 1,
+    `inst/assoc` == "1"   ~ 1,
+     other_inst  == "ngo" ~ 1)) %>%
+  select(start, inst:`inst/none`, other_inst, inst_ngo)
+
+```
+
+
 
 ***
 
@@ -398,9 +445,9 @@ k.data <- k.data %>% mutate(other_inst = tolower(other_inst)) %>%
 
 ```{r 2.04.1, echo = FALSE}
 paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_challenge_opport))) - 1)
-unique(tolower(k.data$other_challenge_opport[!is.na(k.data$other_challenge_opport)]))
-
-names(k.data %>% select(challenge_opport:`challenge_opport/none`))
+#converting to lower case, ordering by length of response
+v.sor.4 <- unique(tolower(k.data$other_challenge_opport[!is.na(k.data$other_challenge_opport)]))
+v.sor.4[order(nchar(v.sor.4), v.sor.4)]
 ```
 
 ##### Original options and cleaned groupings:
@@ -422,19 +469,36 @@ names(k.data %>% select(challenge_opport:`challenge_opport/none`))
 | none               | None of the above             | None                     |
 
 
-
 ##### Cleaned codes
 
-| code         | code_cleaned | field_cleaned        |
-| ------------ | -------------|--------------------- |
-|          |      |            |
-
+| code               | code_cleaned | field_cleaned            |
+| ------------------ | ------------ | ------------------------ |
+| cost               | access_cost  | Cost                     |
+| internet           | access_wifi  | Internet Access          |
+| elect              | access_elec  | Electricity              |
+| nocomput           | acess_comp   | Computer Access          |
+| compissue          | comp_issue   | Computer Issues          |
+| lackspace          | access_space | Lack of Space            |
+| unawareoffer       | access_aware | Unaware of Offers        |
+| lacktime           | access_time  | Lack of Time             |
+| language           | lang_barrier | Language Barrier         |
+| anxiety_notmotiv   | anx_motiv    | Anxiety and distractions |
+| timezone           | time_zone    | Time zone                |
+| anxiety_notinteres | uninterested | Uninterested             |
+| none               | none         | None                     |
 
 ```{r 2.04.2, echo = FALSE}
 #Replacing other responses with code from original options
-k.data <- k.data %>% mutate(other_inst = tolower(other_inst)) %>%
-  mutate(other_inst = recode(other_inst,
-    "" = "",
+k.data <- k.data %>% mutate(other_challenge_opport = tolower(other_challenge_opport)) %>%
+  mutate(other_challenge_opport = recode(other_challenge_opport,
+    "tsy fahaizana teny hafa"                                         = "language",
+    "limitation de possibilite"                                       = "unawareoffer",
+    "non maitrise des protocoles"                                     = "comp_issue",
+    "cost of the internet connexion"                                  = "internet",
+    "limitation du nombre de participants"                            = "unawareoffer",
+    "problème des manipulation des logiciel informatique"             = "comp_issue",
+    "perturbation à domicile à cause de la presence de vie familiale" = "access_space",
+    "voisins et entourage bruyants, source d'incompréhension et de malaise vis à vis des interlocuteurs"  = "access_space"
     ))
 ```
 
