@@ -409,13 +409,33 @@ Type of institution = NGO `inst_ngo`:
   2. selected institution as association (`inst/assoc` == "1")
   3. selected other institution but other response is ngo (`other_inst == "ngo"`)
 
+***
+
+Type of institution = Governmental Agency `inst_gov`: 
+  1. selected institution as gov (`inst/gov_pub_agen` == "1")
+  2. selected other institution but other response is gov (`other_inst == "gov_pub_agen"`)
+
+***
+
+Type of institution = Research Institution `inst_lab`: 
+  1. selected institution as lab or research center (`inst/lab` == "1")
+  2. selected other institution but other response is gov (`other_inst == "lab"`)
+
+***
+
+Type of institution = Private company `inst_priv`: 
+  1. selected institution as private company (`inst/priv_inst` == "1")
+  2. selected other institution but other response is private company (`other_inst == "priv_inst"`)
+
+
+priv_inst inst_priv
 
 ```{r 2.03.3, echo = FALSE}
 df1 <- k.data %>% select(inst:`inst/none`, other_inst)
 names(df1)
 str(df1)
 
-# 
+
 dfx <- k.data %>%
   #inst_uni
   mutate(inst_uni = case_when(
@@ -431,7 +451,20 @@ dfx <- k.data %>%
     `inst/ngo`   == "1"   ~ 1,
     `inst/assoc` == "1"   ~ 1,
      other_inst  == "ngo" ~ 1)) %>%
-  select(start, inst:`inst/none`, other_inst, inst_ngo)
+  #inst_gov
+  mutate(inst_gov = case_when(
+    `inst/gov_pub_agen` == "1"            ~ 1,
+     other_inst         == "gov_pub_agen" ~ 1)) %>%
+  #inst_lab
+  mutate(inst_lab = case_when(
+    `inst/lab` == "1"        ~ 1,
+     other_inst     == "lab" ~ 1)) %>%
+  #inst_priv
+  mutate(inst_priv = case_when(
+    `inst/priv_inst` == "1"         ~ 1,
+     other_inst      == "priv_inst" ~ 1)) %>%
+
+  select(start, inst:`inst/none`, other_inst, inst_lab)
 
 ```
 
