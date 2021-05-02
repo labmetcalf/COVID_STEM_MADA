@@ -175,35 +175,35 @@ unique(tolower(k.data$other_field[!is.na(k.data$other_field)]))
 #Replacing other responses with code from original options
 k.data <- k.data %>% mutate(other_field = tolower(other_field)) %>%
   mutate(other_field = recode(other_field,
-    "géologie" = "atmo_earth_ocean",
-    "hydrosciences" = "atmo_earth_ocean",
-    "sciences agronomiques" = "agri_natres",
-    "pharmacologie" = "health_sci",
-    "pharmacology" = "health_sci",
-    "pharmacologie et cosmétologie" = "health_sci",
-    "nutrition" = "health_sci",
-    "pharmarmacologie, cosmetic" = "health_sci",
-    "sciences et technique nucleaires" = "physic",
-    "sciences nucleaires, physiques, nanotechnologie" = "physic",
-    "sciences et techniques nucléaires" = "physic",
-    "sciences techniques nucleaires et nanotechnologie" = "physic",
-    "ecotourism science" = "enviro",
-    "paléontologie" = "bio_sci",
-    "science et technologie" = "comp_sci",
-    "paleontology" = "bio_sci",
-    "marine biology" = "bio_sci",
-    "administration" = "nonstem",
-    "marine science" = "atmo_earth_ocean",
-    "animal health sciences" = "bio_sci",
+    "géologie"                           = "atmo_earth_ocean",
+    "hydrosciences"                      = "atmo_earth_ocean",
+    "sciences agronomiques"              = "agri_natres",
+    "pharmacologie"                      = "health_sci",
+    "pharmacology"                       = "health_sci",
+    "pharmacologie et cosmétologie"      = "health_sci",
+    "nutrition"                          = "health_sci",
+    "pharmarmacologie, cosmetic"         = "health_sci",
+    "sciences et technique nucleaires"   = "physic",
+    "sciences et techniques nucléaires"  = "physic",
+    "ecotourism science"                 = "enviro",
+    "paléontologie"                      = "bio_sci",
+    "science et technologie"             = "comp_sci",
+    "paleontology"                       = "bio_sci",
+    "marine biology"                     = "bio_sci",
+    "administration"                     = "nonstem",
+    "marine science"                     = "atmo_earth_ocean",
+    "animal health sciences"             = "bio_sci",
     "etudes envionnementales en général" = "enviro",
-    "zoology" = "bio_sci",
-    "entomologie" = "bio_sci",
-    "physique nucléaire" = "physic",
-    "sciences de l'environnement et du développement durable" = "enviro",
-    "économie de la santé" = "health_sci",
-    "science de la nature et de l'ecosystème" = "enviro",
-    "géographie" = "atmo_earth_ocean",
-    "science de la terre" = "atmo_earth_ocean"
+    "zoology"                            = "bio_sci",
+    "entomologie"                        = "bio_sci",
+    "physique nucléaire"                 = "physic",
+    "économie de la santé"               = "health_sci",
+    "géographie"                         = "atmo_earth_ocean",
+    "science de la terre"                = "atmo_earth_ocean",
+    "science de la nature et de l'ecosystème"                 = "enviro",
+    "sciences nucleaires, physiques, nanotechnologie"         = "physic",
+    "sciences techniques nucleaires et nanotechnologie"       = "physic",
+    "sciences de l'environnement et du développement durable" = "enviro"
     ))
 ```
 
@@ -219,120 +219,227 @@ paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_
 unique(tolower(k.data$other_acad[!is.na(k.data$other_acad)]))
 ```
 
-
-- Notes:
-  - What is the difference between Consultant, Independent researcher, and Research officer?
-  - Research assistant should be changed to Research assistant or technician
-  - Add "Principal investigator" or "Research group leader" to Professor etc
-  - Need to check respondent's responses to other questions for some to see what level they are at
-
 ##### Original options and cleaned groupings:
 
-| code                   | full text                                           | field_cleaned                  |
-| ---------------------- | --------------------------------------------------- | ------------------------------ |
-| master_student         | Master's student                                    | Masters student                |
-| masterstud             | Master's student                                    | Masters student                |
-| phdcandidate_student   | PhD candidate or student                            | PhD student                    |
-| phd_stud               | PhD candidate or student                            | PhD student                    |
-| postgrad               | Post-graduate student                               | Postgraduate student           |
-| postdoc                | Postdoctoral researcher                             | Postdoc                        |
-| research_assist        | Research assistant                                  | Research assistant or tech     |
-| instructor             | Faculty member, Professor, or University Instructor | Faculty, PI, or senior level   |
-| consult                | Consultant                                          | Independent or staff scientist |
-| research_officer       | Research officer                                    | Independent or staff scientist |
-| independent_researcher | Independent researcher                              | Independent or staff scientist |
-| retired_scientist      | Retired scientist (No longer engaged in research)   | Retired scientist              |
+| code                   | full text                                           | field_cleaned                |
+| ---------------------- | --------------------------------------------------- | ---------------------------- |
+| master_student         | Master's student                                    | Masters Student              |
+| masterstud             | Master's student                                    | Masters Student              |
+| phdcandidate_student   | PhD candidate or student                            | PhD Student                  |
+| phd_stud               | PhD candidate or student                            | PhD Student                  |
+| postgrad               | Post-graduate student                               | Postgraduate Student         |
+| postdoc                | Postdoctoral researcher                             | Postdoc                      |
+| research_assist        | Research assistant                                  | Research Assistant or Tech   |
+| instructor             | Faculty member, Professor, or University Instructor | Faculty, PI, or Senior Level |
+| consult                | Consultant                                          | STEM Professional            |
+| research_officer       | Research officer                                    | STEM Professional            |
+| independent_researcher | Independent researcher                              | STEM Professional            |
+| retired_scientist      | Retired scientist (No longer engaged in research)   | Retired scientist            |
+| NA_not_eligible        | Not eligible                                        | Not eligible                 |
 
 ##### Cleaned codes
 
-| code                   | code_cleaned |                                 |
-| ---------------------- | -------------|-------------------------------- |
-| master_student         | student_ms   | Masters student                 |
-| masterstud             | student_ms   | Masters student                 |
-| phdcandidate_student   | student_phd  | PhD student                     |
-| phd_stud               | student_phd  | PhD student                     |
-| postgrad               | postgrad     | Postgraduate student            |
-| postdoc                | postdoc      | Postdoc                         |
-| research_assist        | ra_tech      | Research assistant or tech      |
-| instructor             | senior_pi    | Faculty, PI, or senior level    |
-| consult                | staff_res    | Independent or staff researcher |
-| research_officer       | staff_res    | Independent or staff researcher |
-| independent_researcher | staff_res    | Independent or staff researcher |
-| retired_scientist      | ret_sci      | Retired scientist               |
+| code                   | code_cleaned | field_cleaned                |
+| ---------------------- | -------------|----------------------------- |
+| master_student         | student_ms   | Masters Student              |
+| masterstud             | student_ms   | Masters Student              |
+| phdcandidate_student   | student_phd  | PhD Student                  |
+| phd_stud               | student_phd  | PhD Student                  |
+| postgrad               | postgrad     | Postgraduate Student         |
+| postdoc                | postdoc      | Postdoc                      |
+| research_assist        | ra_tech      | Research Assistant or Tech   |
+| instructor             | senior_pi    | Faculty, PI, or Senior level |
+| consult                | staff_res    | STEM Professional            |
+| research_officer       | staff_res    | STEM Professional            |
+| independent_researcher | staff_res    | STEM Professional            |
+| retired_scientist      | ret_sci      | Emeritus                     |
+| NA_not_eligible        | NA_inelig    | Not eligible                 |
 
 
 ```{r 2.02.2, echo = FALSE}
 #Replacing other responses with code from original options
 k.data <- k.data %>% mutate(other_acad = tolower(other_acad)) %>%
   mutate(other_acad = recode(other_acad,
-    "assistant d'enseignement supérieur" = "research_assist",
-    "ingénieur de maintenance" = "research_officer",
-    "cadre dans une entreprise" = "",
-    "enseignant-chercher (vacataire)" = "",
-    "technicien de laboratoire" = "research_assist",
-    "enseignant vacataire,consultant" = "",
-    "médecin" = "",
-    "i am recently graduated and would like to wait a while before continuing my study" = "postgrad",
-    "medicin" = "",
-    "professeur" = "instructor",
-    "etudiante en licence"  = "",
-    "directeur général"  = "instructor",
-    "gestionnaire de site aires protégées marine" = "",
-    "président gerp"  = "instructor",
-    "fonctionnaire de l'état"  = "",
-    "professeur titulaire"  = "instructor",
-    "clo multidisciplinaire" = "",
-    "formation spécialisée" = "research_officer",
-    "gestionnaire aire protégée"  = "",
-    "coordinatrice d'étude clinique" = "research_officer",
-    "socio-organisateur dans ong blue ventures"  = "research_officer",
-    "chercheur biologiste"  = "research_officer",
-    "travailleur"  = "",
-    "monitoring and evaluation" = "research_officer",
-    "suivi évaluation" = "research_officer",
-    "cco  (biologiste preleveur)" = "",
-    "chef de volet conservation"  = "",
-    "administration (asity) et responsable de formation"  = "research_officer",
-    "coordinateur de projet" = "research_officer",
-    "chargé d'études environnementales" = "research_officer",
-    "coordinatrice de projet"  = "research_officer",
-    "master ii" = "master_student",
-    "chercheur, chef d'unité"  = "instructor",
+    "medicin"                              = "research_officer",
+    "médecin"                              = "research_officer",
+    "professeur"                           = "instructor",
+    "etudiante en licence"                 = "NA_not_eligible",           #Not eligible, still an undergrad
+    "directeur général"                    = "instructor",
+    "président gerp"                       = "instructor",
+    "fonctionnaire de l'état"              = "research_officer",
+    "professeur titulaire"                 = "instructor",
+    "clo multidisciplinaire"               = "research_officer",
+    "formation spécialisée"                = "research_officer",
+    "chercheur biologiste"                 = "research_officer",
+    "travailleur"                          = "research_officer",
+    "monitoring and evaluation"            = "research_officer",
+    "suivi évaluation"                     = "research_officer",
+    "cco  (biologiste preleveur)"          = "research_officer",
+    "chef de volet conservation"           = "instructor",
+    "travailleurs"                         = "research_officer",
+    "thesard doctorat d'exercice"          = "phd_stud",
+    "responsable technique"                = "research_officer",
+    "secrétaire de direction"              = "research_officer",
+    "secrétaire"                           = "research_officer",
+    "technicienne de surface"              = "research_assist",
+    "responsable environnement"            = "research_officer",
+    "responsable ictc"                     = "research_officer",
+    "en recherche de finacement"           = "research_officer",
+    "recently graduate"                    = "postgrad",
+    "ministre"                             = "instructor",
+    "aucun"                                = "postgrad",
+    "directeur du parc"                    = "instructor",
+    "directeur"                            = "instructor",
+    "salariée"                             = "research_officer",
+    "enseignant vacataire"                 = "phd_stud",
+    "responsable laborat"                  = "research_officer",
+    "responsable d'hygiène"                = "research_officer",
+    "enseignante vacataire"                = "phd_stud",
+    "entrepreneur"                         = "consult",
+    "technicien de production"             = "research_assist",
+    "graduate"                             = "postgrad",
+    "assistant d'enseignement supérieur"   = "research_assist",
+    "ingénieur de maintenance"             = "research_officer",
+    "cadre dans une entreprise"            = "instructor",
+    "enseignant-chercher (vacataire)"      = "instructor",
+    "technicien de laboratoire"            = "research_assist",
+    "enseignant vacataire,  consultant"    = "research_officer",
+    "chef de projet dans la conservation"  = "instructor",
+    "enseignant vacataire-informaticien"   = "phd_stud",
+    "coordinateur de projet"               = "research_officer",
+    "chargé d'études environnementales"    = "research_officer",
+    "coordinatrice de projet"              = "research_officer",
+    "master ii"                            = "master_student",
+    "chercheur, chef d'unité"              = "instructor",
     "practitioner in marine conservation"  = "research_officer",
-    "travailleurs" = "",
-    "thesard doctorat d'exercice" = "",
-    "responsable technique" = "",
-    "secrétaire de direction"  = "research_officer",
-    "chef service administratif et financier" = "",
-    "secrétaire" = "",
-    "technicienne de surface"  = "research_assist",
-    "responsable environnement" = "",
-    "chef de projet dans la conservation"  = "",
-    "responsable ictc" = "",
-    "en recherche de finacement"  = "",
-    "i still study at the undergraduate level" = "",
-    "recently graduate"  = "postgrad",
-    "ministre"  = "instructor",
-    "manager en éducation environnementale" = "",
+    "chef service administratif et financier"     = "research_officer",
+    "responsable production et environnement"     = "research_officer",
+    "respo admin personnel et juridique"          = "research_officer",
+    "cadre dans un projet de développement"       = "research_officer",
+    "i still study at the undergraduate level"    = "NA_not_eligible",         #Not eligible, still an undergrad
+    "gestionnaire de site aires protégées marine" = "research_officer",
+    "gestionnaire aire protégée"                  = "research_officer",
+    "coordinatrice d'étude clinique"              = "research_officer",
+    "socio-organisateur dans ong blue ventures"   = "research_officer",
+    "manager en éducation environnementale"       = "research_officer",
     "en cours de preparation de l'inscription au doctorat" = "postgrad",
-    "aucun"  = "",
-    "directeur du parc"  = "instructor",
-    "directeur" = "instructor",
-    "salariée"  = "",
-    "enseignant vacataire"  = "",
-    "enseignant vacataire-informaticien" = "",
-    "responsable laborat" = "",
-    "responsable d'hygiène" = "",
-    "enseignante vacataire" = "",
-    "entrepreneur" = "consult",
-    "responsable production et environnement" = "",
-    "respo admin personnel et juridique" = "",
-    "cadre dans un projet de développement" = "",
-    "technicien de production" = "research_assist",
-    "graduate" = "postgrad"
+    "administration (asity) et responsable de formation"   = "research_officer",
+    "i am recently graduated and would like to wait a while before continuing my study" = "postgrad"
     ))
-    
+
+#Removing ineligible participants (e.g., still undergraduate students)
+# Keeping rows where other_acad = NA (participant selected one of the standard options)
+k.data <- k.data %>% filter(is.na(other_acad) | other_acad != "NA_not_eligible")
+
 ```
+
+***
+
+**3. Type of institution**
+
+- Listing other responses
+
+```{r 2.03.1, echo = FALSE}
+paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_inst))) - 1)
+unique(tolower(k.data$other_inst[!is.na(k.data$other_inst)]))
+```
+
+##### Original options and cleaned groupings:
+
+| code         | full text                                           | field_cleaned        |
+| ------------ | --------------------------------------------------- | -------------------- |
+| univ         | University (public / private)                       | University           |
+| ngo          | NGO / Association                                   | NGO                  |
+| gov_pub_agen | Government ministry / Government agency             | Governmental Agency  |
+| lab          | Laboratory / Research center / Research group       | Research Institution |
+| priv_inst    | Private company                                     | Private Company      |
+| none         | None of the above                                   | Independent          |
+
+
+##### Cleaned codes
+
+| code         | code_cleaned | field_cleaned        |
+| ------------ | -------------|--------------------- |
+| univ         | inst_uni     | University           |
+| ngo          | inst_ngo     | NGO                  |
+| gov_pub_agen | inst_gov     | Governmental Agency  |
+| lab          | inst_lab     | Research Institution |
+| priv_inst    | inst_priv    | Private Company      |
+| none         | inst_none    | Independent          |
+
+
+```{r 2.03.2, echo = FALSE}
+#Replacing other responses with code from original options
+k.data <- k.data %>% mutate(other_inst = tolower(other_inst)) %>%
+  mutate(other_inst = recode(other_inst,
+    "protection de l'environnement" = "univ",
+    "pnud/gef"                      = "ngo",
+    "independent"                   = "none",
+    "homeopharma"                   = "priv_inst",
+    "ist ampasampito"               = "univ",
+    "ist"                           = "univ",
+    "stem4good"                     = "ngo",
+    "ird"                           = "lab",
+    "private high school"           = "priv_inst",
+    "ips"                           = "ngo",
+    "centre de recherches"          = "lab",
+    "bureau d'étude"                = "priv_inst",
+    "organisme international"       = "ngo",
+    "société  civil"                = "gov_pub_agen"
+    ))
+```
+
+
+***
+
+**4. Challenges to attend online opportunities**
+
+- Listing other responses
+
+```{r 2.04.1, echo = FALSE}
+paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_challenge_opport))) - 1)
+unique(tolower(k.data$other_challenge_opport[!is.na(k.data$other_challenge_opport)]))
+
+names(k.data %>% select(challenge_opport:`challenge_opport/none`))
+```
+
+##### Original options and cleaned groupings:
+
+| code               | full text                     | field_cleaned            |
+| ------------------ | ----------------------------- | ------------------------ |
+| cost               | Costs                         | Cost                     |
+| internet           | Internet access issues        | Internet Access          |
+| elect              | Electricity access issues     | Electricity              |
+| nocomput           | No personal computer          | Computer Access          |
+| compissue          | Computer issues               | Computer Issues          |
+| lackspace          | Lack of a space at home       | Lack of Space            |
+| unawareoffer       | Unaware of interesting offers | Unaware of Offers        |
+| lacktime           | Lack of time                  | Lack of Time             |
+| language           | Language barriers             | Language Barrier         |
+| anxiety_notmotiv   | Anxiety or other distractions | Anxiety and distractions |
+| timezone           | Difference in time zone       | Time zone                |
+| anxiety_notinteres | Not interested                | Uninterested             |
+| none               | None of the above             | None                     |
+
+
+
+##### Cleaned codes
+
+| code         | code_cleaned | field_cleaned        |
+| ------------ | -------------|--------------------- |
+|          |      |            |
+
+
+```{r 2.04.2, echo = FALSE}
+#Replacing other responses with code from original options
+k.data <- k.data %>% mutate(other_inst = tolower(other_inst)) %>%
+  mutate(other_inst = recode(other_inst,
+    "" = "",
+    ))
+```
+
+
+
 ***
 ***
 
