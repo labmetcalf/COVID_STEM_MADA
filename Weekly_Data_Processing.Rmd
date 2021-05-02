@@ -105,7 +105,25 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 ***
 ***
 
-#### Section 2.1 | Cleaning up "other" responses
+#### Section 2.1 | Removing incomplete survyes or ineligible respondents
+
+- Removing individuals who chose not to start the survey
+- Removing individuals who are not Malagasy or did not live in Madagascar in 2020
+- Removing individuals who are not in a STEM field
+
+```{r 2.01.1, echo = FALSE}
+k.data <- k.data %>% 
+  filter(!is.na(agreement))   %>% filter(agreement   == "yes")  %>%
+  filter(!is.na(nationality)) %>% filter(nationality == "gasy") %>%
+  filter(!is.na(residence))   %>% filter(residence   == "yes") %>%
+  filter(!is.na(field))       %>% filter(field       != "nonstem") %>%
+  filter(!is.na(gender))
+```
+
+
+***
+
+#### Section 2.2 | Cleaning up "other" responses
 
 Questions with "other" responses:
 
@@ -122,7 +140,7 @@ Questions with "other" responses:
 
 - Listing other responses
 
-```{r 2.01.1, echo = FALSE}
+```{r 2.02.1A, echo = FALSE}
 paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_field))) - 1)
 unique(tolower(k.data$other_field[!is.na(k.data$other_field)]))
 ```
@@ -171,7 +189,7 @@ unique(tolower(k.data$other_field[!is.na(k.data$other_field)]))
 | physic                 | phys_sci     | Physical Sciences                   |
 | nonstem                | non_stem     | Non-STEM                            |
 
-```{r 2.01.2, echo = FALSE}
+```{r 2.02.1B, echo = FALSE}
 #Replacing other responses with code from original options
 k.data <- k.data %>% mutate(other_field = tolower(other_field)) %>%
   mutate(other_field = recode(other_field,
@@ -214,7 +232,7 @@ k.data <- k.data %>% mutate(other_field = tolower(other_field)) %>%
 
 - Listing other responses
 
-```{r 2.02.1, echo = FALSE}
+```{r 2.02.2A, echo = FALSE}
 paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_acad))) - 1)
 unique(tolower(k.data$other_acad[!is.na(k.data$other_acad)]))
 ```
@@ -256,7 +274,7 @@ unique(tolower(k.data$other_acad[!is.na(k.data$other_acad)]))
 | NA_not_eligible        | NA_inelig    | Not eligible                 |
 
 
-```{r 2.02.2, echo = FALSE}
+```{r 2.02.2B, echo = FALSE}
 #Replacing other responses with code from original options
 k.data <- k.data %>% mutate(other_acad = tolower(other_acad)) %>%
   mutate(other_acad = recode(other_acad,
@@ -339,7 +357,7 @@ k.data <- k.data %>% filter(is.na(other_acad) | other_acad != "NA_not_eligible")
 
 ##### Listing other responses
 
-```{r 2.03.1, echo = FALSE}
+```{r 2.02.3A, echo = FALSE}
 paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_inst))) - 1)
 unique(tolower(k.data$other_inst[!is.na(k.data$other_inst)]))
 ```
@@ -355,7 +373,7 @@ unique(tolower(k.data$other_inst[!is.na(k.data$other_inst)]))
 | priv_inst    | Private company                                     | Private Company      |
 | none         | None of the above                                   | Independent          |
 
-```{r 2.03.2, echo = FALSE}
+```{r 2.02.3B, echo = FALSE}
 #Replacing other responses with code from original options
 k.data <- k.data %>% mutate(other_inst = tolower(other_inst)) %>%
   mutate(other_inst = recode(other_inst,
@@ -389,11 +407,14 @@ k.data <- k.data %>% mutate(other_inst = tolower(other_inst)) %>%
 | priv_inst    | inst_priv    | Private Company      |
 | none         | inst_none    | Independent          |
 
+***
+
 Criteria:
 
 ***
 
-Type of instution = University `inst_uni`: 
+Type of institution = University `inst_uni`: 
+
   1. selected institution as university (`inst/univ` == "1")
   2. selected other institution but other response is university (`other_inst == "univ"`)
   3. selected academic stage as masters or PhD student:
@@ -427,16 +448,15 @@ Type of institution = Private company `inst_priv`:
   1. selected institution as private company (`inst/priv_inst` == "1")
   2. selected other institution but other response is private company (`other_inst == "priv_inst"`)
 
+***
 
-priv_inst inst_priv
+Type of institution = None / Independent `inst_none`: 
+  1. no other institution type selected (`inst_uni != 1 & inst_ngo != 1 & inst_gov != 1 & inst_lab != 1 & inst_priv != 1`)
 
-```{r 2.03.3, echo = FALSE}
-df1 <- k.data %>% select(inst:`inst/none`, other_inst)
-names(df1)
-str(df1)
+***
 
-
-dfx <- k.data %>%
+```{r 2.02.3C, echo = FALSE}
+k.data <- k.data %>%
   #inst_uni
   mutate(inst_uni = case_when(
     `inst/univ`                 == "1"    ~ 1,
@@ -445,27 +465,41 @@ dfx <- k.data %>%
     `acad/masterstud`           == "1"    ~ 1,
     `acad/phdcandidate_student` == "1"    ~ 1,
     `acad/pdhstud`              == "1"    ~ 1,
-     acad %in% c("master_student", "masterstud", "phdcandidate_student", "pdhstud") ~ 1,)) %>% 
+     acad %in% c("master_student", "masterstud", "phdcandidate_student", "pdhstud") ~ 1,
+     is.na(inst) ~ NA_real_,
+     TRUE ~ 0)) %>% 
   #inst_ngo
   mutate(inst_ngo = case_when(
     `inst/ngo`   == "1"   ~ 1,
     `inst/assoc` == "1"   ~ 1,
-     other_inst  == "ngo" ~ 1)) %>%
+     other_inst  == "ngo" ~ 1,
+     is.na(inst) ~ NA_real_,
+     TRUE ~ 0)) %>% 
   #inst_gov
   mutate(inst_gov = case_when(
     `inst/gov_pub_agen` == "1"            ~ 1,
-     other_inst         == "gov_pub_agen" ~ 1)) %>%
+     other_inst         == "gov_pub_agen" ~ 1,
+     is.na(inst) ~ NA_real_,
+     TRUE ~ 0)) %>% 
   #inst_lab
   mutate(inst_lab = case_when(
     `inst/lab` == "1"        ~ 1,
-     other_inst     == "lab" ~ 1)) %>%
+     other_inst     == "lab" ~ 1,
+     is.na(inst) ~ NA_real_,
+     TRUE ~ 0)) %>% 
   #inst_priv
   mutate(inst_priv = case_when(
     `inst/priv_inst` == "1"         ~ 1,
-     other_inst      == "priv_inst" ~ 1)) %>%
-
-  select(start, inst:`inst/none`, other_inst, inst_lab)
-
+     other_inst      == "priv_inst" ~ 1,
+     is.na(inst) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #inst_priv
+  group_by(`_index`) %>% mutate(inst_none = case_when(
+     sum(inst_uni, inst_ngo, inst_gov, inst_lab, inst_priv, na.rm = TRUE) < 1 ~ 1,
+     is.na(inst) ~ NA_real_,
+     TRUE ~ 0)) %>% ungroup() %>%
+  #Removing old institution type columns
+  select(start:affiliation, inst_uni, inst_ngo, inst_gov, inst_lab, inst_priv, inst_none, office_build:`_index`)
 ```
 
 
@@ -476,7 +510,7 @@ dfx <- k.data %>%
 
 - Listing other responses
 
-```{r 2.04.1, echo = FALSE}
+```{r 2.02.4A, echo = FALSE}
 paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_challenge_opport))) - 1)
 #converting to lower case, ordering by length of response
 v.sor.4 <- unique(tolower(k.data$other_challenge_opport[!is.na(k.data$other_challenge_opport)]))
@@ -501,6 +535,20 @@ v.sor.4[order(nchar(v.sor.4), v.sor.4)]
 | anxiety_notinteres | Not interested                | Uninterested             |
 | none               | None of the above             | None                     |
 
+```{r 2.02.4B, echo = FALSE}
+#Replacing other responses with code from original options
+k.data <- k.data %>% mutate(other_challenge_opport = tolower(other_challenge_opport)) %>%
+  mutate(other_challenge_opport = recode(other_challenge_opport,
+    "tsy fahaizana teny hafa"                                         = "language",
+    "limitation de possibilite"                                       = "unawareoffer",
+    "non maitrise des protocoles"                                     = "comp_issue",
+    "cost of the internet connexion"                                  = "internet",
+    "limitation du nombre de participants"                            = "unawareoffer",
+    "problème des manipulation des logiciel informatique"             = "comp_issue",
+    "perturbation à domicile à cause de la presence de vie familiale" = "access_space",
+    "voisins et entourage bruyants, source d'incompréhension et de malaise vis à vis des interlocuteurs"  = "access_space"
+    ))
+```
 
 ##### Cleaned codes
 
@@ -520,20 +568,79 @@ v.sor.4[order(nchar(v.sor.4), v.sor.4)]
 | anxiety_notinteres | uninterested | Uninterested             |
 | none               | none         | None                     |
 
-```{r 2.04.2, echo = FALSE}
-#Replacing other responses with code from original options
-k.data <- k.data %>% mutate(other_challenge_opport = tolower(other_challenge_opport)) %>%
-  mutate(other_challenge_opport = recode(other_challenge_opport,
-    "tsy fahaizana teny hafa"                                         = "language",
-    "limitation de possibilite"                                       = "unawareoffer",
-    "non maitrise des protocoles"                                     = "comp_issue",
-    "cost of the internet connexion"                                  = "internet",
-    "limitation du nombre de participants"                            = "unawareoffer",
-    "problème des manipulation des logiciel informatique"             = "comp_issue",
-    "perturbation à domicile à cause de la presence de vie familiale" = "access_space",
-    "voisins et entourage bruyants, source d'incompréhension et de malaise vis à vis des interlocuteurs"  = "access_space"
-    ))
+***
+
+Criteria:
+
+***
+
+Challenge to online activities = Cost `access_cost`: 
+
+  1. selected cost (`inst/univ` == "1")
+  2. selected other institution but other response is university (`other_inst == "univ"`)
+  3. selected academic stage as masters or PhD student:
+    - (`acad/master_student` == "1" | `acad/masterstud` == "1" | `acad/phdcandidate_student` == "1" | `acad/pdhstud` == "1")
+    - Note that PhD student code was mispelled in original survey deployment: pdh not phd
+  4. Note for some February 5 surveys, the columns with 1s and 0s for each option did not automatically generate
+    - (`acad %in% c("master_student", "masterstud", "phdcandidate_student", "pdhstud")`) 
+
+***
+
+
+
+
+
+```{r 2.02.3C, echo = FALSE}
+dfx1 <- k.data %>% select(`_index`, challenge_opport:`challenge_opport/none`, other_challenge_opport)
+
+dfx <- dfx1 %>%
+  #inst_uni
+  mutate(inst_uni = case_when(
+    `inst/univ`                 == "1"    ~ 1,
+     other_inst                 == "univ" ~ 1,
+    `acad/master_student`       == "1"    ~ 1,
+    `acad/masterstud`           == "1"    ~ 1,
+    `acad/phdcandidate_student` == "1"    ~ 1,
+    `acad/pdhstud`              == "1"    ~ 1,
+     acad %in% c("master_student", "masterstud", "phdcandidate_student", "pdhstud") ~ 1,
+     is.na(inst) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #inst_ngo
+  mutate(inst_ngo = case_when(
+    `inst/ngo`   == "1"   ~ 1,
+    `inst/assoc` == "1"   ~ 1,
+     other_inst  == "ngo" ~ 1,
+     is.na(inst) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #inst_gov
+  mutate(inst_gov = case_when(
+    `inst/gov_pub_agen` == "1"            ~ 1,
+     other_inst         == "gov_pub_agen" ~ 1,
+     is.na(inst) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #inst_lab
+  mutate(inst_lab = case_when(
+    `inst/lab` == "1"        ~ 1,
+     other_inst     == "lab" ~ 1,
+     is.na(inst) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #inst_priv
+  mutate(inst_priv = case_when(
+    `inst/priv_inst` == "1"         ~ 1,
+     other_inst      == "priv_inst" ~ 1,
+     is.na(inst) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #inst_priv
+  group_by(`_index`) %>% mutate(inst_none = case_when(
+     sum(inst_uni, inst_ngo, inst_gov, inst_lab, inst_priv, na.rm = TRUE) < 1 ~ 1,
+     is.na(inst) ~ NA_real_,
+     TRUE ~ 0)) %>% ungroup() %>%
+  #Removing old institution type columns
+  select(start:affiliation, inst_uni, inst_ngo, inst_gov, inst_lab, inst_priv, inst_none, office_build:`_index`)
 ```
+
+
+
 
 
 
