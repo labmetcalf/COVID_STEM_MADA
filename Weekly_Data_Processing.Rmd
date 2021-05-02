@@ -105,7 +105,9 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 ***
 ***
 
-#### Section 2.1 | Removing incomplete survyes or ineligible respondents
+#### Section 2.1 | Removing junk rows and junk columns
+
+**(1)** Removing incomplete surveys or ineligible respondents
 
 - Removing individuals who chose not to start the survey
 - Removing individuals who are not Malagasy or did not live in Madagascar in 2020
@@ -118,6 +120,52 @@ k.data <- k.data %>%
   filter(!is.na(residence))   %>% filter(residence   == "yes") %>%
   filter(!is.na(field))       %>% filter(field       != "nonstem") %>%
   filter(!is.na(gender))
+```
+
+**(2)** Removing columns that do not contain data
+
+```{r 2.0.1, echo = FALSE}
+k.data <- k.data %>% 
+            #Removing intro prompt (no data)
+  select(-c(`Nous_effectuons_une_ent_pour_votre_temps`,
+            #Removing prompt before publications question (no data)
+            `_3_09_Veuillez_indiq_proceedings_livres`,
+            #Removing prompt for if HH size exceed 15 (no data) 
+            `Si_plus_de_10_indivi_plus_g_s_ci_dessus`,
+            #Removing GPS data (auto-collected and not accurate)
+            `store_gps`, `_store_gps_latitude`, `_store_gps_longitude`, 
+            `_store_gps_altitude`, `_store_gps_precision`,
+            #Removing prompts thanking the respondent and finishing the survey (no data)
+            `Merci_pour_votre_tem_ns_une_bonne_journ_e`, `L_ENQUETE_SE_TERMINE_VOTRE_PARTICIPATION_`,
+            `Nous_vous_remercions_STEM_Madagascar`, `THIS_COMPLETES_THE_S_H_FOR_PARTICIPATING__001`,
+            `We_are_conducting_a_nk_you_for_your_time`,
+            #age and student status columns from a draft version that were never deployed  (no data)
+            `age_a`, `age_b`, `age_c`, `display`, `student_yes_no`, `level`,
+            #more draft columns  (no data)
+            `_3_12_Please_list_th_e_proceedings_books`, `_3_12_Veuillez_indiq_proceedings_livres`,
+            `_3_12B_Please_list_t_e_proceedings_books`, `_3_12B_Please_list_th_e_proceedings_books`,
+            #columns for questions related to computer issues, question was dropped (only 7 respondents)
+            `computer_issue`, `computer_issue/noissue`, `computer_issue/cantconnect`, `computer_issue/nocam`,
+            `computer_issue/batissue`, `computer_issue/crashoften`, `computer_issue/lostwork`,
+            `computer_issue/lackssoft`, `computer_issue/diffconnectvideo`, `computer_issue/keyboard`,
+            `computer_issue/usephone`, `computer_issue/slowcomp`, `computer_issue/frustraoldcomp`,
+            `computer_issue/na`,
+            #columns for an abonded way of asking about age and sex of hh members (only 7 respondents)
+            `sex_hh_memb`, `_4_04_Veuillez_indiq_us_EN_VOUS_EXCLUANT`, `_4_04_Please_indicat_u_NOT_INCLUDING_YOU`,
+            `sex_hh_memb_001`, `_0_5`, `_5_10`, `sex_hh_memb_002`, `_10_15`, `_15_20`, `sex_hh_memb_003`, `_20_25`, 
+            `_25_30`, `sex_hh_memb_004`, `_30_50`, `_50_55`, `sex_hh_memb_005`, `_55_60`, `_60_65`,
+            `sex_hh_memb_006`, `_65_plus`, `If_more_than_10_indi_st_individuals_above`, 
+            `sex_hh_memb_007`, `sex_hh_memb_008`, `sex_hh_memb_009`,
+            #columns for dropped questions without data (no data)
+            `week_inter_cov`, `week_inter_house`, `stress_house`, `stress_infectfam`,
+            #columns for questions related to transpo disruptions, and illness
+            #question was dropped (only 7 respondents)
+            `disrup_transp`, `illness`, `stop_day_covid`,
+            #Prompts for concluding the survey (no data)
+            `Thank_you_for_your_t_wish_you_a_great_day`, `THIS_COMPLETES_THE_S_H_FOR_PARTICIPATING_`,
+            `Thank_you_for_your_i_STEM_in_Madagascar`,
+            #Unnecessary auto generated columns
+            `_id`, `_uuid`, `_validation_status`, `_notes`, `_status`, `_submitted_by`, `_tags`))
 ```
 
 
@@ -167,28 +215,6 @@ unique(tolower(k.data$other_field[!is.na(k.data$other_field)]))
 | other_eng	             | Other Engineering Sciences                  | Engineering Sciences                |
 | nonstem                | Non-STEM field                              | Non-STEM                            |
 
-##### Cleaned codes
-
-| code                   | code_cleaned | field_cleaned                       |
-| ---------------------- | ------------ | ----------------------------------- |
-| agri_natres            | agro_sci     | Agriculture & Natural Resources     |
-| agro                   | agro_sci     | Agriculture & Natural Resources     |
-| comp_scien             | comp_sci     | Computer Science                    |
-| atmo_earth_ocean       | earth_sci    | Atmospheric, Earth & Ocean Sciences |
-| eletc_mech             | engi_sci     | Engineering Sciences                |
-| other_eng	             | engi_sci     | Engineering Sciences                |
-| enviro                 | env_sci      | Environmental Sciences              |
-| health_sci             | health_sci   | Clinical & Health Sciences          |
-| pharm_cosmet           | health_sci   | Clinical & Health Sciences          |
-| clinicsci              | health_sci   | Clinical & Health Sciences          |
-| biochem_cell_mol_biolo | life_sci     | Biological Sciences                 |
-| bio_sci                | life_sci     | Biological Sciences                 |
-| math_stat              | math_stats   | Mathematics & Statistics            |
-| astro	                 | phys_sci     | Physical Sciences                   |
-| chem_chemeng           | phys_sci     | Physical Sciences                   |
-| physic                 | phys_sci     | Physical Sciences                   |
-| nonstem                | non_stem     | Non-STEM                            |
-
 ```{r 2.02.1B, echo = FALSE}
 #Replacing other responses with code from original options
 k.data <- k.data %>% mutate(other_field = tolower(other_field)) %>%
@@ -223,7 +249,125 @@ k.data <- k.data %>% mutate(other_field = tolower(other_field)) %>%
     "sciences techniques nucleaires et nanotechnologie"       = "physic",
     "sciences de l'environnement et du développement durable" = "enviro"
     ))
+#Deleting 1 individual who selected other and wrote nonstem
+#Removing ineligible participants (e.g., still undergraduate students)
+# Keeping rows where other_acad = NA (participant selected one of the standard options)
+k.data <- k.data %>% filter(is.na(other_field) | other_field != "nonstem")
 ```
+
+##### Creating cleaned, standardized columns (1s and 0s for each option)
+
+##### Cleaned codes
+
+| code                   | code_cleaned | field_cleaned                       |
+| ---------------------- | ------------ | ----------------------------------- |
+| agri_natres            | agro_sci     | Agriculture & Natural Resources     |
+| agro                   | agro_sci     | Agriculture & Natural Resources     |
+| comp_scien             | comp_sci     | Computer Science                    |
+| atmo_earth_ocean       | earth_sci    | Atmospheric, Earth & Ocean Sciences |
+| eletc_mech             | engi_sci     | Engineering Sciences                |
+| other_eng	             | engi_sci     | Engineering Sciences                |
+| enviro                 | env_sci      | Environmental Sciences              |
+| health_sci             | health_sci   | Clinical & Health Sciences          |
+| pharm_cosmet           | health_sci   | Clinical & Health Sciences          |
+| clinicsci              | health_sci   | Clinical & Health Sciences          |
+| biochem_cell_mol_biolo | life_sci     | Biological Sciences                 |
+| bio_sci                | life_sci     | Biological Sciences                 |
+| math_stat              | math_stats   | Mathematics & Statistics            |
+| astro	                 | phys_sci     | Physical Sciences                   |
+| chem_chemeng           | phys_sci     | Physical Sciences                   |
+| physic                 | phys_sci     | Physical Sciences                   |
+| nonstem                | non_stem     | Non-STEM                            |
+
+***
+
+Criteria:
+
+***
+
+For each, the respondent either selected that STEM field  or selected other but their response is categorized as that field For example, for Agriculture & Natural Resources:
+
+STEM field = Agriculture & Natural Resources `agro_sci`: 
+  1. selected `agri_natres` or `agro`
+  2. selected other field but other response is `agri_natres` or `agro`
+
+***
+
+```{r 2.02.3C, echo = FALSE}
+k.data <- k.data %>%
+  #agro_sci
+  mutate(agro_sci = case_when(
+    `field/agri_natres` == "1"           ~ 1,
+    `field/agro`        == "1"           ~ 1,
+     other_field        == "agri_natres" ~ 1,
+     other_field        == "agro"        ~ 1,
+     is.na(field) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #comp_sci
+  mutate(comp_sci = case_when(
+    `field/comp_scien` == "1"          ~ 1,
+     other_field       == "comp_scien" ~ 1,
+     is.na(field) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #earth_sci
+  mutate(earth_sci = case_when(
+    `field/atmo_earth_ocean` == "1"                ~ 1,
+     other_field             == "atmo_earth_ocean" ~ 1,
+     is.na(field) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #engi_sci
+  mutate(engi_sci = case_when(
+    `field/eletc_mech` == "1"          ~ 1,
+    `field/other_eng`  == "1"          ~ 1,
+     other_field       == "eletc_mech" ~ 1,
+     other_field       == "other_eng"  ~ 1,
+     is.na(field) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #env_sci
+  mutate(env_sci = case_when(
+     other_field   == "enviro" ~ 1,
+     is.na(field) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #health_sci
+  mutate(health_sci = case_when(
+    `field/health_sci`   == "1"            ~ 1,
+    `field/pharm_cosmet` == "1"            ~ 1,
+    `field/clinicsci`    == "1"            ~ 1,
+     other_field         == "health_sci"   ~ 1,
+     other_field         == "pharm_cosmet" ~ 1,
+     other_field         == "clinicsci"    ~ 1,
+     is.na(field) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #life_sci
+  mutate(life_sci = case_when(
+    `field/biochem_cell_mol_biolo` == "1"                      ~ 1,
+    `field/bio_sci`                == "1"                      ~ 1,
+     other_field                   == "biochem_cell_mol_biolo" ~ 1,
+     other_field                   == "bio_sci"                ~ 1,
+     is.na(field) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #math_stats
+  mutate(math_stats = case_when(
+    `field/math_stat` == "1"         ~ 1,
+     other_field      == "math_stat" ~ 1,
+     is.na(field) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #phys_sci
+  mutate(phys_sci = case_when(
+    `field/astro`        == "1"            ~ 1,
+    `field/chem_chemeng` == "1"            ~ 1,
+    `field/physic`       == "1"            ~ 1,
+     other_field         == "astro"        ~ 1,
+     other_field         == "chem_chemeng" ~ 1,
+     other_field         == "physic"       ~ 1,
+     is.na(field) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #Removing old field columns
+  select(start:residence, 
+         agro_sci, comp_sci, earth_sci, engi_sci, env_sci, health_sci, life_sci, math_stats, phys_sci, 
+         age:`_index`)
+```
+
 
 ***
 
@@ -348,7 +492,6 @@ k.data <- k.data %>% mutate(other_acad = tolower(other_acad)) %>%
 #Removing ineligible participants (e.g., still undergraduate students)
 # Keeping rows where other_acad = NA (participant selected one of the standard options)
 k.data <- k.data %>% filter(is.na(other_acad) | other_acad != "NA_not_eligible")
-
 ```
 
 ***
@@ -493,7 +636,7 @@ k.data <- k.data %>%
      other_inst      == "priv_inst" ~ 1,
      is.na(inst) ~ NA_real_,
      TRUE ~ 0)) %>% 
-  #inst_priv
+  #inst_none
   group_by(`_index`) %>% mutate(inst_none = case_when(
      sum(inst_uni, inst_ngo, inst_gov, inst_lab, inst_priv, na.rm = TRUE) < 1 ~ 1,
      is.na(inst) ~ NA_real_,
@@ -566,7 +709,7 @@ k.data <- k.data %>% mutate(other_challenge_opport = tolower(other_challenge_opp
 | anxiety_notmotiv   | anx_motiv    | Anxiety and distractions |
 | timezone           | time_zone    | Time zone                |
 | anxiety_notinteres | uninterested | Uninterested             |
-| none               | none         | None                     |
+| none               | chall_none   | None                     |
 
 ***
 
@@ -574,73 +717,89 @@ Criteria:
 
 ***
 
-Challenge to online activities = Cost `access_cost`: 
+For each, the respondent either selected that challenge to online activities or selected other but their response is categorized as that challenge. For example, for cost:
 
-  1. selected cost (`inst/univ` == "1")
-  2. selected other institution but other response is university (`other_inst == "univ"`)
-  3. selected academic stage as masters or PhD student:
-    - (`acad/master_student` == "1" | `acad/masterstud` == "1" | `acad/phdcandidate_student` == "1" | `acad/pdhstud` == "1")
-    - Note that PhD student code was mispelled in original survey deployment: pdh not phd
-  4. Note for some February 5 surveys, the columns with 1s and 0s for each option did not automatically generate
-    - (`acad %in% c("master_student", "masterstud", "phdcandidate_student", "pdhstud")`) 
+Challenge to online activities = Cost `access_cost`: 
+  1. selected cost (`challenge_opport/cost` == "1")
+  2. selected other but other response is cost (`other_challenge_opport == "cost"`)
 
 ***
 
-
-
-
-
 ```{r 2.02.3C, echo = FALSE}
-dfx1 <- k.data %>% select(`_index`, challenge_opport:`challenge_opport/none`, other_challenge_opport)
-
-dfx <- dfx1 %>%
-  #inst_uni
-  mutate(inst_uni = case_when(
-    `inst/univ`                 == "1"    ~ 1,
-     other_inst                 == "univ" ~ 1,
-    `acad/master_student`       == "1"    ~ 1,
-    `acad/masterstud`           == "1"    ~ 1,
-    `acad/phdcandidate_student` == "1"    ~ 1,
-    `acad/pdhstud`              == "1"    ~ 1,
-     acad %in% c("master_student", "masterstud", "phdcandidate_student", "pdhstud") ~ 1,
-     is.na(inst) ~ NA_real_,
+k.data <- k.data %>%
+  #access_cost
+  mutate(access_cost = case_when(
+    `challenge_opport/cost` == "1"    ~ 1,
+     other_challenge_opport == "cost" ~ 1,
+     is.na(challenge_opport) ~ NA_real_,
      TRUE ~ 0)) %>% 
-  #inst_ngo
-  mutate(inst_ngo = case_when(
-    `inst/ngo`   == "1"   ~ 1,
-    `inst/assoc` == "1"   ~ 1,
-     other_inst  == "ngo" ~ 1,
-     is.na(inst) ~ NA_real_,
+  mutate(access_wifi = case_when(
+    `challenge_opport/internet` == "1"    ~ 1,
+     other_challenge_opport     == "internet" ~ 1,
+     is.na(challenge_opport) ~ NA_real_,
+     TRUE ~ 0)) %>%
+  mutate(access_elec = case_when(
+    `challenge_opport/elect` == "1"     ~ 1,
+     other_challenge_opport  == "elect" ~ 1,
+     is.na(challenge_opport) ~ NA_real_,
      TRUE ~ 0)) %>% 
-  #inst_gov
-  mutate(inst_gov = case_when(
-    `inst/gov_pub_agen` == "1"            ~ 1,
-     other_inst         == "gov_pub_agen" ~ 1,
-     is.na(inst) ~ NA_real_,
+  mutate(acess_comp = case_when(
+    `challenge_opport/nocomput` == "1"        ~ 1,
+     other_challenge_opport     == "nocomput" ~ 1,
+     is.na(challenge_opport) ~ NA_real_,
      TRUE ~ 0)) %>% 
-  #inst_lab
-  mutate(inst_lab = case_when(
-    `inst/lab` == "1"        ~ 1,
-     other_inst     == "lab" ~ 1,
-     is.na(inst) ~ NA_real_,
+  mutate(comp_issue = case_when(
+    `challenge_opport/compissue` == "1"          ~ 1,
+     other_challenge_opport       == "compissue" ~ 1,
+     is.na(challenge_opport) ~ NA_real_,
      TRUE ~ 0)) %>% 
-  #inst_priv
-  mutate(inst_priv = case_when(
-    `inst/priv_inst` == "1"         ~ 1,
-     other_inst      == "priv_inst" ~ 1,
-     is.na(inst) ~ NA_real_,
+  mutate(access_space = case_when(
+    `challenge_opport/lackspace` == "1"         ~ 1,
+     other_challenge_opport      == "lackspace" ~ 1,
+     is.na(challenge_opport) ~ NA_real_,
      TRUE ~ 0)) %>% 
-  #inst_priv
-  group_by(`_index`) %>% mutate(inst_none = case_when(
-     sum(inst_uni, inst_ngo, inst_gov, inst_lab, inst_priv, na.rm = TRUE) < 1 ~ 1,
-     is.na(inst) ~ NA_real_,
+  mutate(access_aware = case_when(
+    `challenge_opport/unawareoffer` == "1"            ~ 1,
+     other_challenge_opport         == "unawareoffer" ~ 1,
+     is.na(challenge_opport) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  mutate(access_time = case_when(
+    `challenge_opport/lacktime` == "1"    ~ 1,
+     other_challenge_opport     == "lacktime" ~ 1,
+     is.na(challenge_opport) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  mutate(lang_barrier = case_when(
+    `challenge_opport/language` == "1"        ~ 1,
+     other_challenge_opport     == "language" ~ 1,
+     is.na(challenge_opport) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  mutate(anx_motiv = case_when(
+    `challenge_opport/anxiety_notmotiv` == "1"                ~ 1,
+     other_challenge_opport             == "anxiety_notmotiv" ~ 1,
+     is.na(challenge_opport) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  mutate(time_zone = case_when(
+    `challenge_opport/timezone` == "1"        ~ 1,
+     other_challenge_opport     == "timezone" ~ 1,
+     is.na(challenge_opport) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  mutate(uninterested = case_when(
+    `challenge_opport/anxiety_notinteres` == "1"                  ~ 1,
+     other_challenge_opport               == "anxiety_notinteres" ~ 1,
+     is.na(challenge_opport) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #chall_none
+  group_by(`_index`) %>% mutate(chall_none = case_when(
+     sum(access_cost, access_wifi, access_elec, acess_comp, comp_issue, access_space, 
+         access_aware, access_time, lang_barrier, anx_motiv, time_zone, uninterested, na.rm = TRUE) < 1 ~ 1,
+     is.na(challenge_opport) ~ NA_real_,
      TRUE ~ 0)) %>% ungroup() %>%
-  #Removing old institution type columns
-  select(start:affiliation, inst_uni, inst_ngo, inst_gov, inst_lab, inst_priv, inst_none, office_build:`_index`)
+  #Removing old online activity challange columns
+  select(start:opport_virtual_current,
+         access_cost, access_wifi, access_elec, acess_comp, comp_issue, access_space, 
+         access_aware, access_time, lang_barrier, anx_motiv, time_zone, uninterested,
+         cohab_status:`_index`)
 ```
-
-
-
 
 
 
