@@ -86,7 +86,8 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 - Data file name should include the date at which data was downloaded
 
 ```{r 1.01}
-k.data <- read_xlsx(here("DATA_07_Impacts_of_Covid-19_on_Malagasy_STEM_-_all_versions_-_False_-_2021-05-01-13-20-40.xlsx"))
+k.data <- read_xlsx(here(
+  "DATA/DATA_08_Impacts_of_Covid-19_on_Malagasy_STEM_-_all_versions_-_False_-_2021-05-09-10-27-09.xlsx"))
 ```
 
 
@@ -112,6 +113,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 - Removing individuals who chose not to start the survey
 - Removing individuals who are not Malagasy or did not live in Madagascar in 2020
 - Removing individuals who are not in a STEM field
+
 - Removing individuals with unlikely/illogical responses (e.g., age 100 years but walks to work each day)
 
 ```{r 2.01.1, echo = FALSE}
@@ -121,14 +123,11 @@ k.data <- k.data %>%
   filter(!is.na(residence))   %>% filter(residence   == "yes") %>%
   filter(!is.na(field))       %>% filter(field       != "nonstem") %>%
   filter(!is.na(gender))
-
-
-
 ```
 
 **(2)** Removing columns that do not contain data
 
-```{r 2.0.1, echo = FALSE}
+```{r 2.01.2, echo = FALSE}
 k.data <- k.data %>% 
             #Removing intro prompt (no data)
   select(-c(`Nous_effectuons_une_ent_pour_votre_temps`,
@@ -170,6 +169,25 @@ k.data <- k.data %>%
             `Thank_you_for_your_i_STEM_in_Madagascar`,
             #Unnecessary auto generated columns
             `_id`, `_uuid`, `_validation_status`, `_notes`, `_status`, `_submitted_by`, `_tags`))
+```
+
+**(3)** Renaming problematic column names
+
+- `_index` to `index`
+- `_submission_time` to `submission_time`
+
+```{r 2.01.3, echo = FALSE}
+k.data <- k.data %>% rename(index = `_index`) %>% rename(submission_time = `_submission_time`)
+
+
+```
+
+**(4)** Removing individuals with unlikely/illogical responses
+
+- `index` = `990`: Individual sampled 2021-05-06 reported age of 100 years but walks to work each day
+
+```{r 2.01.4, echo = FALSE}
+k.data <- k.data %>% filter(!(today == "2021-05-06" & age == "1921" & index == 990))
 ```
 
 
@@ -251,7 +269,12 @@ k.data <- k.data %>% mutate(other_field = tolower(other_field)) %>%
     "science de la nature et de l'ecosystème"                 = "enviro",
     "sciences nucleaires, physiques, nanotechnologie"         = "physic",
     "sciences techniques nucleaires et nanotechnologie"       = "physic",
-    "sciences de l'environnement et du développement durable" = "enviro"
+    "sciences de l'environnement et du développement durable" = "enviro",
+    #09 May 2021 updates
+    "génie civil"                          = "other_eng",
+    "hydrographie industriel et thermique" = "atmo_earth_ocean",
+    "hydrologie"                           = "atmo_earth_ocean",
+    "medecine humaine"                     = "clinicsci"
     ))
 #Deleting 1 individual who selected other and wrote nonstem
 #Removing ineligible participants (e.g., still undergraduate students)
@@ -369,7 +392,7 @@ k.data <- k.data %>%
   #Removing old field columns
   select(start:residence, 
          agro_sci, comp_sci, earth_sci, engi_sci, env_sci, health_sci, life_sci, math_stats, phys_sci, 
-         age:`_index`)
+         age:index)
 ```
 
 
@@ -491,11 +514,17 @@ k.data <- k.data %>% mutate(other_acad = tolower(other_acad)) %>%
     "en cours de preparation de l'inscription au doctorat" = "postgrad",
     "administration (asity) et responsable de formation"   = "research_officer",
     "i am recently graduated and would like to wait a while before continuing my study" = "postgrad"
+    #09 May 2021 updates
+    
     ))
 
 #Removing ineligible participants (e.g., still undergraduate students)
 # Keeping rows where other_acad = NA (participant selected one of the standard options)
 k.data <- k.data %>% filter(is.na(other_acad) | other_acad != "NA_not_eligible")
+
+print(unique(k.data$other_acad))
+
+
 ```
 
 ***
@@ -566,7 +595,7 @@ Type of institution = University `inst_uni`:
   2. selected other institution but other response is university (`other_inst == "univ"`)
   3. selected academic stage as masters or PhD student:
     - (`acad/master_student` == "1" | `acad/masterstud` == "1" | `acad/phdcandidate_student` == "1" | `acad/pdhstud` == "1")
-    - Note that PhD student code was mispelled in original survey deployment: pdh not phd
+    - Note that PhD student code was misspelled in original survey deployment: pdh not phd
   4. Note for some February 5 surveys, the columns with 1s and 0s for each option did not automatically generate
     - (`acad %in% c("master_student", "masterstud", "phdcandidate_student", "pdhstud")`) 
 
@@ -641,12 +670,12 @@ k.data <- k.data %>%
      is.na(inst) ~ NA_real_,
      TRUE ~ 0)) %>% 
   #inst_none
-  group_by(`_index`) %>% mutate(inst_none = case_when(
+  group_by(index) %>% mutate(inst_none = case_when(
      sum(inst_uni, inst_ngo, inst_gov, inst_lab, inst_priv, na.rm = TRUE) < 1 ~ 1,
      is.na(inst) ~ NA_real_,
      TRUE ~ 0)) %>% ungroup() %>%
   #Removing old institution type columns
-  select(start:affiliation, inst_uni, inst_ngo, inst_gov, inst_lab, inst_priv, inst_none, office_build:`_index`)
+  select(start:affiliation, inst_uni, inst_ngo, inst_gov, inst_lab, inst_priv, inst_none, office_build:index)
 ```
 
 
@@ -793,7 +822,7 @@ k.data <- k.data %>%
      is.na(challenge_opport) ~ NA_real_,
      TRUE ~ 0)) %>% 
   #chall_none
-  group_by(`_index`) %>% mutate(chall_none = case_when(
+  group_by(index) %>% mutate(chall_none = case_when(
      sum(access_cost, access_wifi, access_elec, acess_comp, comp_issue, access_space, 
          access_aware, access_time, lang_barrier, anx_motiv, time_zone, uninterested, na.rm = TRUE) < 1 ~ 1,
      is.na(challenge_opport) ~ NA_real_,
@@ -802,7 +831,7 @@ k.data <- k.data %>%
   select(start:opport_virtual_current,
          access_cost, access_wifi, access_elec, acess_comp, comp_issue, access_space, 
          access_aware, access_time, lang_barrier, anx_motiv, time_zone, uninterested,
-         cohab_status:`_index`)
+         cohab_status:index)
 ```
 
 
@@ -1130,9 +1159,8 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 (Preparing the data for plotting)
 
 ```{r 6.01, fig.height=7, fig.width=10, echo=FALSE}
-#Renaming the index column (the integers counting up assigned to each submission/respondent in Kobo)
-# (to use for joining later)
-df.hhc <- k.data %>% rename(index = "_index") %>% 
+
+df.hhc <- k.data %>% 
   #Selecting relevant columns
   select(index, age, gender, region, acad, 
          nb_room,
@@ -1146,7 +1174,7 @@ df.hhc <- k.data %>% rename(index = "_index") %>%
   mutate(age_hh_memb_i = 2021-age) %>%
   #Using join to add the columns containing ages of the other household members
   #Doing separately so can convert all columns to numeric using mutate_if()
-  full_join(k.data %>% rename(index = "_index") %>% 
+  full_join(k.data %>% 
               #renaming the column with the age of the first other household member (the 2nd member of the household)
               # age_hh_memb_000
               mutate(age_hh_memb_000 = age_hh_memb) %>%
