@@ -224,8 +224,6 @@ k.data <- k.data %>% mutate(month_closed = recode(month_closed,
 ```
 
 
-
-
 ***
 ***
 
@@ -1049,7 +1047,6 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 paste0("Dates of surveys completed:")
 paste0(sort(unique(k.data$today)))
 paste0("Number of surveys completed (n) = ", length(k.data$agreement[k.data$agreement == "yes"]))
-paste0("Number of incomplete or aborted surveys = ", sum(is.na(k.data$gender)))
 paste0("Number of surveys completed, female = ", 
        length(k.data$agreement[k.data$agreement == "yes" & k.data$gender == "female"]))
 paste0("Number of surveys completed, male  = ", 
@@ -1192,9 +1189,9 @@ f.plot.res_act <- function(dataset, activity, activity_name){
 (for those respondents identifying these as applicable activities for their work or studies)
 
 ```{r 5.04, echo = FALSE}
-p.rae.field <- f.plot.res_act(dataset = k.data, activity = "fieldwork_affect", activity_name <- "Fieldwork")
-p.rae.write <- f.plot.res_act(dataset = k.data, activity = "writ_affect",      activity_name <- "Writing")
-p.rae.datan <- f.plot.res_act(dataset = k.data, activity = "data_affect",      activity_name <- "Data Analysis")
+p.rae.field <- f.plot.res_act(dataset = k.data, activity = "fieldwork_affect", activity_name = "Fieldwork")
+p.rae.write <- f.plot.res_act(dataset = k.data, activity = "writ_affect",      activity_name = "Writing")
+p.rae.datan <- f.plot.res_act(dataset = k.data, activity = "data_affect",      activity_name = "Data Analysis")
 
 grid.arrange(p.rae.field, p.rae.write, p.rae.datan, nrow = 1)
 ```
@@ -1235,7 +1232,7 @@ Questionnaire Section 6: Stress during the coronavirus pandemic
 - Preparing data for plotting
 ```{r 6.01, echo=FALSE}
 #Selecting relevant columns, dropping NAs, and nonbinary gender respondents (because n = 3)
-df.stress <- k.data %>% select(year_of_birth:acad, stress_delaywork:stress_relation, stress_moneyemplo:stress_anxiety) %>% 
+df.stress <- k.data %>% select(year_of_birth:degree, stress_delaywork:stress_relation, stress_moneyemplo:stress_anxiety) %>% 
   drop_na() %>%
   filter(gender != "other_notsay")
 #Calculating the percent of respondents with moderate, strong, or extreme stress (p.ss) for each topic
@@ -1352,7 +1349,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 ```{r 7.01, echo=FALSE}
 df.hhc <- k.data %>% 
   #Selecting relevant columns
-  select(index, year_of_birth, gender, region, acad, 
+  select(index, year_of_birth, gender, region,
          nb_room,
          hh_member_count,
          close_contact) %>%
@@ -1395,7 +1392,7 @@ df.hhc <- k.data %>%
   #Giving a rank for plotting (index_hh) that restarts at 1 for each household size
   group_by(hh_member_count) %>% mutate(index_hh = 1:length(index)) %>% ungroup() %>%
   #Melting so each individual is on a row
-  melt(id.vars = c("index", "index_hh", "year_of_birth", "gender", "region", "acad", 
+  melt(id.vars = c("index", "index_hh", "year_of_birth", "gender", "region",
                    "nb_room", "hh_member_count", "close_contact",
                    "pers_per_room", "cols_w_age", "hh_diff", "max_age")) %>%
   #For plotting with a different color, adding a marker for individuals 65 and older
@@ -1416,7 +1413,7 @@ p.hhc <- df.hhc %>% ggplot(aes(x = value, y = index_hh, color = old)) +
   facet_grid(~ hh_member_count, scales = "fixed") +
   xlab("Age of household members") + ylab("Household") +
   scale_color_manual(values = c("black", "#c51162"), 
-                     labels = c("Housholds with 0 individuals > 65   ", "Households with 1+ individual > 65")) +
+                     labels = c("Housholds with 0 individuals > 65        ", "Households with 1+ individual > 65")) +
   theme_bw() +
   scale_y_continuous(breaks = c(1:max(df.hhc$index_hh)+1)) +
   rremove("y.text") +
@@ -1431,15 +1428,16 @@ p.hhc <- df.hhc %>% ggplot(aes(x = value, y = index_hh, color = old)) +
 p.hhc
 ```
 
-- Plotting the histogram of the number of individuals per room
+- Plotting a histogram of the number of individuals per room for Analamanga
 
 ```{r 7.03, fig.height=7, fig.width=10, echo=FALSE}
 #Keeping the pers_per_room from the melted df.hhc
 df.hhc %>% group_by(index) %>% summarize(pers_per_room = max(pers_per_room), .groups = "drop") %>%
   ggplot(aes(x = pers_per_room)) +
-  geom_histogram(binwidth=1, fill = "#00695c") + 
+  geom_bar(fill = "#00695c") +
+  scale_x_binned() +
   xlab("Number of individuals per room in the house \n (excluding bathrooms and kitchen)") +
-  ylab("Count") + theme_bw()
+  ylab("Count") + theme_minimal()
 ```
 
 
