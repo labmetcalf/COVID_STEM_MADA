@@ -1428,6 +1428,7 @@ p.hhc <- df.hhc %>% ggplot(aes(x = value, y = index_hh, color = old)) +
 p.hhc
 ```
 
+
 - Plotting a histogram of the number of individuals per room for Analamanga
 
 ```{r 7.03, fig.height=7, fig.width=10, echo=FALSE}
