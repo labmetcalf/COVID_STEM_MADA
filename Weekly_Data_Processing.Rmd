@@ -171,29 +171,68 @@ k.data <- k.data %>%
             `_id`, `_uuid`, `_validation_status`, `_notes`, `_status`, `_submitted_by`, `_tags`))
 ```
 
-**(3)** Renaming problematic column names
+#### Section 2.2 | Renaming problematic column names
 
-- `_index` to `index`
-- `_submission_time` to `submission_time`
+1. columns starting with weird characters: `_index` to `index`; `_submission_time` to `submission_time`
+2. columns with uninformative names: `age` to `year_of_birth`
 
-```{r 2.01.3, echo = FALSE}
-k.data <- k.data %>% rename(index = `_index`) %>% rename(submission_time = `_submission_time`)
 
+```{r 2.02, echo = FALSE}
+k.data <- k.data %>% 
+  rename(index = `_index`) %>% rename(submission_time = `_submission_time`) %>%
+  rename(year_of_birth = age)
+```
+
+#### Section 2.3 | Removing individuals with unlikely/illogical responses
+
+1. `index` = `990`: Individual sampled 2021-05-06 reported age of 100 years but walks to work each day
+
+```{r 2.03, echo = FALSE}
+k.data <- k.data %>% filter(!(today == "2021-05-06" & year_of_birth == "1921" & index == 990))
+```
+
+#### Section 2.4 | Recoding multiple choice selection options
+
+1. `degree` : combining `master` and `maitrise` to `masters`; `license` to `bachelors`
+2. `month_closed`: options for 1-2 months, 2-3 months erroneously formatting as dates; convert to characters
+
+```{r 2.04, echo = FALSE}
+k.data <- k.data %>% mutate(degree = recode(degree,
+    "maitrise" = "masters",
+    "master"   = "masters",
+    "licence"  = "bachelors"))
+
+#month_closed options: 0_1_mos, 1_2_mos, 2_3_mos, 3_4_mos, 4_5_mos, 5plus_mos
+k.data <- k.data %>% mutate(month_closed = recode(month_closed,
+    "less1"               = "0_1_mos",
+    "2021-01-02 00:00:00" = "1_2_mos",
+    "2021-02-03 00:00:00" = "2_3_mos",
+    "2021-03-04 00:00:00" = "3_4_mos",
+    "2021-04-05 00:00:00" = "4_5_mos",
+    "more5"               = "5plus_mos"))
+
+table(k.data$month_closed)
 
 ```
 
-**(4)** Removing individuals with unlikely/illogical responses
 
-- `index` = `990`: Individual sampled 2021-05-06 reported age of 100 years but walks to work each day
-
-```{r 2.01.4, echo = FALSE}
-k.data <- k.data %>% filter(!(today == "2021-05-06" & age == "1921" & index == 990))
-```
 
 
 ***
+***
 
-#### Section 2.2 | Cleaning up "other" responses
+<style>
+div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
+</style>
+<div class = "green">
+
+### Section 3 | Cleaning up "other" responses
+
+</div>
+
+***
+***
+***
 
 Questions with "other" responses:
 
@@ -210,7 +249,7 @@ Questions with "other" responses:
 
 - Listing other responses
 
-```{r 2.02.1A, echo = FALSE}
+```{r 3.01A, echo = FALSE}
 paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_field))) - 1)
 unique(tolower(k.data$other_field[!is.na(k.data$other_field)]))
 ```
@@ -237,7 +276,7 @@ unique(tolower(k.data$other_field[!is.na(k.data$other_field)]))
 | other_eng	             | Other Engineering Sciences                  | Engineering Sciences                |
 | nonstem                | Non-STEM field                              | Non-STEM                            |
 
-```{r 2.02.1B, echo = FALSE}
+```{r 3.01B, echo = FALSE}
 #Replacing other responses with code from original options
 k.data <- k.data %>% mutate(other_field = tolower(other_field)) %>%
   mutate(other_field = recode(other_field,
@@ -320,7 +359,7 @@ STEM field = Agriculture & Natural Resources `agro_sci`:
 
 ***
 
-```{r 2.02.3C, echo = FALSE}
+```{r 3.01C, echo = FALSE}
 k.data <- k.data %>%
   #agro_sci
   mutate(agro_sci = case_when(
@@ -392,7 +431,7 @@ k.data <- k.data %>%
   #Removing old field columns
   select(start:residence, 
          agro_sci, comp_sci, earth_sci, engi_sci, env_sci, health_sci, life_sci, math_stats, phys_sci, 
-         age:index)
+         year_of_birth:index)
 ```
 
 
@@ -403,7 +442,7 @@ k.data <- k.data %>%
 
 - Listing other responses
 
-```{r 2.02.2A, echo = FALSE}
+```{r 3.02A, echo = FALSE}
 paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_acad))) - 1)
 unique(tolower(k.data$other_acad[!is.na(k.data$other_acad)]))
 ```
@@ -426,26 +465,8 @@ unique(tolower(k.data$other_acad[!is.na(k.data$other_acad)]))
 | retired_scientist      | Retired scientist (No longer engaged in research)   | Retired scientist            |
 | NA_not_eligible        | Not eligible                                        | Not eligible                 |
 
-##### Cleaned codes
 
-| code                   | code_cleaned | field_cleaned                |
-| ---------------------- | -------------|----------------------------- |
-| master_student         | student_ms   | Masters Student              |
-| masterstud             | student_ms   | Masters Student              |
-| phdcandidate_student   | student_phd  | PhD Student                  |
-| pdhstud                | student_phd  | PhD Student                  |
-| postgrad               | postgrad     | Postgraduate Student         |
-| postdoc                | postdoc      | Postdoc                      |
-| research_assist        | ra_tech      | Research Assistant or Tech   |
-| instructor             | senior_pi    | Faculty, PI, or Senior level |
-| consult                | staff_res    | STEM Professional            |
-| research_officer       | staff_res    | STEM Professional            |
-| independent_researcher | staff_res    | STEM Professional            |
-| retired_scientist      | ret_sci      | Emeritus                     |
-| NA_not_eligible        | NA_inelig    | Not eligible                 |
-
-
-```{r 2.02.2B, echo = FALSE}
+```{r 3.02B, echo = FALSE}
 #Replacing other responses with code from original options
 k.data <- k.data %>% mutate(other_acad = tolower(other_acad)) %>%
   mutate(other_acad = recode(other_acad,
@@ -484,7 +505,7 @@ k.data <- k.data %>% mutate(other_acad = tolower(other_acad)) %>%
     "responsable laborat"                  = "research_officer",
     "responsable d'hygiène"                = "research_officer",
     "enseignante vacataire"                = "phd_stud",
-    "entrepreneur"                         = "consult",
+    "entrepreneur"                         = "research_officer",
     "technicien de production"             = "research_assist",
     "graduate"                             = "postgrad",
     "assistant d'enseignement supérieur"   = "research_assist",
@@ -492,7 +513,7 @@ k.data <- k.data %>% mutate(other_acad = tolower(other_acad)) %>%
     "cadre dans une entreprise"            = "instructor",
     "enseignant-chercher (vacataire)"      = "instructor",
     "technicien de laboratoire"            = "research_assist",
-    "enseignant vacataire,  consultant"    = "research_officer",
+    "enseignant vacataire,   consultant"   = "research_officer",
     "chef de projet dans la conservation"  = "instructor",
     "enseignant vacataire-informaticien"   = "phd_stud",
     "coordinateur de projet"               = "research_officer",
@@ -513,19 +534,186 @@ k.data <- k.data %>% mutate(other_acad = tolower(other_acad)) %>%
     "manager en éducation environnementale"       = "research_officer",
     "en cours de preparation de l'inscription au doctorat" = "postgrad",
     "administration (asity) et responsable de formation"   = "research_officer",
-    "i am recently graduated and would like to wait a while before continuing my study" = "postgrad"
+    "i am recently graduated and would like to wait a while before continuing my study" = "postgrad",
     #09 May 2021 updates
-    
+    "ingénieur en mécanique"             = "research_officer",
+    "volontaire"                         = "postgrad",
+    "biologiste"                         = "research_officer",
+    "interne en médecine et thésard"     = "phd_stud",
+    "chef de projet"                     = "instructor",
+    "responsable conservation"           = "research_officer",
+    "ingénieur informatique"             = "research_officer",
+    "je n'ai pas de position académique" = "research_officer",
+    "none"                               = "research_officer",
+    "enseignants vacataire"              = "instructor"
     ))
 
 #Removing ineligible participants (e.g., still undergraduate students)
 # Keeping rows where other_acad = NA (participant selected one of the standard options)
 k.data <- k.data %>% filter(is.na(other_acad) | other_acad != "NA_not_eligible")
-
-print(unique(k.data$other_acad))
-
-
 ```
+
+##### Creating cleaned, standardized columns (1s and 0s for each option)
+
+##### Cleaned codes
+
+| code                   | code_cleaned | field_cleaned                |
+| ---------------------- | -------------|----------------------------- |
+| master_student         | student_ms   | Masters Student              |
+| masterstud             | student_ms   | Masters Student              |
+| phdcandidate_student   | student_phd  | PhD Student                  |
+| pdhstud                | student_phd  | PhD Student                  |
+| postgrad               | postgrad     | Postgraduate Student         |
+| postdoc                | postdoc      | Postdoc                      |
+| research_assist        | ra_tech      | Research Assistant or Tech   |
+| instructor             | senior_pi    | Faculty, PI, or Senior level |
+| consult                | staff_res    | STEM Professional            |
+| research_officer       | staff_res    | STEM Professional            |
+| independent_researcher | staff_res    | STEM Professional            |
+| retired_scientist      | ret_sci      | Emeritus                     |
+| NA_not_eligible        | NA_inelig    | Not eligible                 |
+
+***
+
+Criteria:
+
+***
+
+Academic stage or position = Masters Student `student_ms`: 
+
+  1. selected acad stage as master (`acad/master_student` == "1" | `acad/masterstud` == "1")
+  2. selected other acad stage but other response is master (`other_acad == "master_student" | other_acad == "masterstud"`)
+  3. Note for some February 5 surveys, the columns with 1s and 0s for each option did not automatically generate
+    - (`acad %in% c("master_student", "masterstud")`) 
+
+***
+
+Academic stage or position = PhD Student `student_phd`: 
+
+  1. selected acad stage as PhD (`acad/phdcandidate_student` == "1" | `acad/pdhstud` == "1")
+    - Note that PhD student code was misspelled in original survey deployment: pdh not phd
+  2. selected other acad stage but other response is PhD (`other_acad == "phd_stud"`)
+  3. Note for some February 5 surveys, the columns with 1s and 0s for each option did not automatically generate
+    - (`acad %in% c("phdcandidate_student", "pdhstud")`) 
+
+***
+
+Academic stage or position = Postgraduate Student `postgrad`: 
+
+  1. selected other acad stage but other response is postgrad (`other_acad == "postgrad"`)
+
+***
+
+Academic stage or position = Postdoc `postdoc`: 
+
+  1. selected acad stage as Postdoc (`acad/postdoc` == "1")
+  2. selected other acad stage but other response is postdoc (`other_acad == "postdoc"`)
+  3. Note for some February 5 surveys, the columns with 1s and 0s for each option did not automatically generate
+    - (`acad == "postdoc"`) 
+
+***
+
+Academic stage or position = Research Assistant or Tech `ra_tech`: 
+
+  1. selected acad stage as ra_tech (`acad/research_assist` == "1")
+  2. selected other acad stage but other response is ra_tech (`other_acad == "research_assist"`)
+  3. Note for some February 5 surveys, the columns with 1s and 0s for each option did not automatically generate
+    - (`acad == "research_assist"`) 
+
+***
+
+Academic stage or position = Faculty, PI, or Senior level `senior_pi`: 
+
+  1. selected acad stage as senior_pi (`acad/instructor` == "1")
+  2. selected other acad stage but other response is senior_pi (`other_acad == "instructor"`)
+  3. Note for some February 5 surveys, the columns with 1s and 0s for each option did not automatically generate
+    - (`acad == "instructor"`) 
+
+***
+
+Academic stage or position = STEM Professional `staff_res`: 
+
+  1. selected acad stage as staff_res 
+    (`acad/consult` == "1" | `acad/research_officer` == "1" | `acad/independent_researcher` == "1")
+  2. selected other acad stage but other response is staff_res (`other_acad == "research_officer"`)
+  3. Note for some February 5 surveys, the columns with 1s and 0s for each option did not automatically generate
+    - (`acad == "consult" | acad == "research_officer" | acad == "independent_researcher"`) 
+
+***
+
+Academic stage or position = Emeritus `ret_sci`: 
+
+  1. selected acad stage as ret_sci (`acad/retired_scientist` == "1")
+  2. selected other acad stage but other response is staff_res (`other_acad == "retired_scientist"`)
+  3. Note for some February 5 surveys, the columns with 1s and 0s for each option did not automatically generate
+    - (`acad == "retired_scientist"`) 
+
+
+```{r 3.02C, echo = FALSE}
+k.data <- k.data %>%
+  #student_ms
+  mutate(student_ms = case_when(
+    `acad/master_student` == "1"              ~ 1,
+    `acad/masterstud`     == "1"              ~ 1,
+     other_acad           == "master_student" ~ 1,
+     other_acad           == "masterstud"     ~ 1,
+     acad %in% c("master_student", "masterstud") ~ 1,
+     is.na(acad) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #student_phd
+  mutate(student_phd = case_when(
+    `acad/phdcandidate_student` == "1"        ~ 1,
+    `acad/pdhstud`              == "1"        ~ 1,
+     other_acad                 == "phd_stud" ~ 1,
+     acad %in% c("phdcandidate_student", "pdhstud") ~ 1,
+     is.na(acad) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #postgrad
+  mutate(postgrad = case_when(
+     other_acad == "postgrad" ~ 1,
+     is.na(acad) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #postdoc
+  mutate(postdoc = case_when(
+    `acad/postdoc` == "1"       ~ 1,
+     other_acad    == "postdoc" ~ 1,
+     acad %in% c("postdoc") ~ 1,
+     is.na(acad) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #ra_tech
+  mutate(ra_tech = case_when(
+    `acad/research_assist` == "1"               ~ 1,
+     other_acad            == "research_assist" ~ 1,
+     acad %in% c("research_assist") ~ 1,
+     is.na(acad) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #senior_pi
+  mutate(senior_pi = case_when(
+    `acad/instructor` == "1"          ~ 1,
+     other_acad       == "instructor" ~ 1,
+     acad %in% c("instructor") ~ 1,
+     is.na(acad) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #staff_res
+  mutate(staff_res = case_when(
+    `acad/consult`                == "1"                ~ 1,
+    `acad/research_officer`       == "1"                ~ 1,
+    `acad/independent_researcher` == "1"                ~ 1,
+     other_acad                   == "research_officer" ~ 1,
+     acad %in% c("consult", "research_officer", "independent_researcher") ~ 1,
+     is.na(acad) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #ret_sci
+  mutate(ret_sci = case_when(
+    `acad/retired_scientist` == "1"                 ~ 1,
+     other_acad              == "retired_scientist" ~ 1,
+     acad %in% c("retired_scientist") ~ 1,
+     is.na(acad) ~ NA_real_,
+     TRUE ~ 0)) %>% 
+  #Removing old academic stage columns
+  select(start:degree, student_ms, student_phd, postgrad, postdoc, ra_tech, senior_pi, staff_res, ret_sci, affiliation:index)
+```
+
 
 ***
 
@@ -533,7 +721,7 @@ print(unique(k.data$other_acad))
 
 ##### Listing other responses
 
-```{r 2.02.3A, echo = FALSE}
+```{r 3.03A, echo = FALSE}
 paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_inst))) - 1)
 unique(tolower(k.data$other_inst[!is.na(k.data$other_inst)]))
 ```
@@ -549,7 +737,7 @@ unique(tolower(k.data$other_inst[!is.na(k.data$other_inst)]))
 | priv_inst    | Private company                                     | Private Company      |
 | none         | None of the above                                   | Independent          |
 
-```{r 2.02.3B, echo = FALSE}
+```{r 3.03B, echo = FALSE}
 #Replacing other responses with code from original options
 k.data <- k.data %>% mutate(other_inst = tolower(other_inst)) %>%
   mutate(other_inst = recode(other_inst,
@@ -593,11 +781,7 @@ Type of institution = University `inst_uni`:
 
   1. selected institution as university (`inst/univ` == "1")
   2. selected other institution but other response is university (`other_inst == "univ"`)
-  3. selected academic stage as masters or PhD student:
-    - (`acad/master_student` == "1" | `acad/masterstud` == "1" | `acad/phdcandidate_student` == "1" | `acad/pdhstud` == "1")
-    - Note that PhD student code was misspelled in original survey deployment: pdh not phd
-  4. Note for some February 5 surveys, the columns with 1s and 0s for each option did not automatically generate
-    - (`acad %in% c("master_student", "masterstud", "phdcandidate_student", "pdhstud")`) 
+  3. selected academic stage as masters or PhD student: (`student_ms` == "1" | `student_phd` == "1")
 
 ***
 
@@ -631,17 +815,14 @@ Type of institution = None / Independent `inst_none`:
 
 ***
 
-```{r 2.02.3C, echo = FALSE}
+```{r 3.03C, echo = FALSE}
 k.data <- k.data %>%
   #inst_uni
   mutate(inst_uni = case_when(
-    `inst/univ`                 == "1"    ~ 1,
-     other_inst                 == "univ" ~ 1,
-    `acad/master_student`       == "1"    ~ 1,
-    `acad/masterstud`           == "1"    ~ 1,
-    `acad/phdcandidate_student` == "1"    ~ 1,
-    `acad/pdhstud`              == "1"    ~ 1,
-     acad %in% c("master_student", "masterstud", "phdcandidate_student", "pdhstud") ~ 1,
+    `inst/univ`  == "1"    ~ 1,
+     other_inst  == "univ" ~ 1,
+     student_ms  == "1"    ~ 1,
+     student_phd == "1"    ~ 1,
      is.na(inst) ~ NA_real_,
      TRUE ~ 0)) %>% 
   #inst_ngo
@@ -686,7 +867,7 @@ k.data <- k.data %>%
 
 - Listing other responses
 
-```{r 2.02.4A, echo = FALSE}
+```{r 3.04A, echo = FALSE}
 paste0("Number of unique other responses: ", length(unique(tolower(k.data$other_challenge_opport))) - 1)
 #converting to lower case, ordering by length of response
 v.sor.4 <- unique(tolower(k.data$other_challenge_opport[!is.na(k.data$other_challenge_opport)]))
@@ -711,18 +892,22 @@ v.sor.4[order(nchar(v.sor.4), v.sor.4)]
 | anxiety_notinteres | Not interested                | Uninterested             |
 | none               | None of the above             | None                     |
 
-```{r 2.02.4B, echo = FALSE}
+```{r 3.04B, echo = FALSE}
 #Replacing other responses with code from original options
 k.data <- k.data %>% mutate(other_challenge_opport = tolower(other_challenge_opport)) %>%
   mutate(other_challenge_opport = recode(other_challenge_opport,
     "tsy fahaizana teny hafa"                                         = "language",
     "limitation de possibilite"                                       = "unawareoffer",
-    "non maitrise des protocoles"                                     = "comp_issue",
+    "non maitrise des protocoles"                                     = "compissue",
     "cost of the internet connexion"                                  = "internet",
     "limitation du nombre de participants"                            = "unawareoffer",
-    "problème des manipulation des logiciel informatique"             = "comp_issue",
-    "perturbation à domicile à cause de la presence de vie familiale" = "access_space",
-    "voisins et entourage bruyants, source d'incompréhension et de malaise vis à vis des interlocuteurs"  = "access_space"
+    "problème des manipulation des logiciel informatique"             = "compissue",
+    "perturbation à domicile à cause de la presence de vie familiale" = "lackspace",
+    "voisins et entourage bruyants, source d'incompréhension et de malaise vis à vis des interlocuteurs"  = "lackspace",
+    #09 May 2021 Update
+    "manque de formation"                             = "compissue",
+    "sûreté de la formation"                          = "compissue",
+    "report de date de formation à cause du covid-19" = "unawareoffer"
     ))
 ```
 
@@ -758,9 +943,8 @@ Challenge to online activities = Cost `access_cost`:
 
 ***
 
-```{r 2.02.3C, echo = FALSE}
+```{r 3.04C, echo = FALSE}
 k.data <- k.data %>%
-  #access_cost
   mutate(access_cost = case_when(
     `challenge_opport/cost` == "1"    ~ 1,
      other_challenge_opport == "cost" ~ 1,
@@ -844,7 +1028,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 </style>
 <div class = "green">
 
-### Section 3 | Progress summaries: Summary stats and sampling time series
+### Section 4 | Progress summaries: Summary stats and sampling time series
 
 </div>
 
@@ -853,7 +1037,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 
 - Summary of sampling progress listed:
 
-```{r 3.01, echo = FALSE}
+```{r 4.01, echo = FALSE}
 paste0("Dates of surveys completed:")
 paste0(sort(unique(k.data$today)))
 paste0("Number of surveys completed (n) = ", length(k.data$agreement[k.data$agreement == "yes"]))
@@ -869,7 +1053,7 @@ paste0("Average number of surveys performed per day of sampling = ",
 ```
 
 - Summary of sampling progress, time series plot:
-```{r 3.02, echo = FALSE}
+```{r 4.02, echo = FALSE}
 p.gender_summary1 <- k.data %>% drop_na(gender) %>% select(agreement, today, gender) %>% group_by(today) %>% 
   summarize(n = length(today), .groups = "drop") %>%
   ggplot(aes(x = today, y = n)) +
@@ -902,11 +1086,11 @@ p.gender_summary3 <- k.data %>% drop_na(gender) %>% select(agreement, today, gen
 
 ```
 
-```{r 3.03, fig.height = 7, fig.width = 10}
+```{r 4.03, fig.height = 7, fig.width = 10}
 grid.arrange(p.gender_summary1, p.gender_summary2, nrow = 1)
 ```
 
-```{r 3.04, fig.height = 7, fig.width = 10}
+```{r 4.04, fig.height = 7, fig.width = 10}
 p.gender_summary3
 ```
 
@@ -919,16 +1103,15 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 </style>
 <div class = "green">
 
-### Section 4 | Preliminary data visualizations: Breakdown by gender
+### Section 5 | Preliminary data visualizations: Impact on research activitiy by gender
 
 </div>
 
 ***
 ***
 
-Plotting research activity effects by gender:
 
-```{r 4.01, echo = FALSE}
+```{r 5.01, echo = FALSE}
 d.rae <- k.data %>% select(gender, fieldwork_affect:editpeer_affect) %>% drop_na(gender) %>% 
   filter(gender != "other_notsay")
 
@@ -958,14 +1141,14 @@ p.rae.writeNA <- d.rae %>%
 
 ```
 
-**Figure 4.02** Impacts of COVID-19 disruptions on fieldwork and writing by gender (including those that responded "not applicable")
-```{r 4.02, fig.height=7, fig.width=10, echo=FALSE}
+**Figure 5A** Impacts of COVID-19 disruptions on fieldwork and writing by gender (including those that responded "not applicable")
+```{r 5.02, fig.height=7, fig.width=10, echo=FALSE}
 grid.arrange(p.rae.fieldNA, p.rae.writeNA, nrow = 1)
 ```
 
 - Writing a function to create the plot for a desired research activity (e.g., `fieldwork_affect`)
 
-```{r 4.02, echo = FALSE}
+```{r 5.03, echo = FALSE}
 f.plot.res_act <- function(dataset, activity, activity_name){
 
   d.res_act <- dataset %>% select(gender, activity) %>% drop_na(gender) %>% filter(gender != "other_notsay")
@@ -997,10 +1180,10 @@ f.plot.res_act <- function(dataset, activity, activity_name){
 ```
 
 
-**Figure 4.03 Impacts of COVID-19 disruptions on fieldwork, writing, and data analysis activity among Malagasy STEM by gender**
+**Figure 5B** Impacts of COVID-19 disruptions on fieldwork, writing, and data analysis activity among Malagasy STEM by gender
 (for those respondents identifying these as applicable activities for their work or studies)
 
-```{r 4.03, echo = FALSE}
+```{r 5.04, echo = FALSE}
 p.rae.field <- f.plot.res_act(dataset = k.data, activity = "fieldwork_affect", activity_name <- "Fieldwork")
 p.rae.write <- f.plot.res_act(dataset = k.data, activity = "writ_affect",      activity_name <- "Writing")
 p.rae.datan <- f.plot.res_act(dataset = k.data, activity = "data_affect",      activity_name <- "Data Analysis")
@@ -1019,7 +1202,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 </style>
 <div class = "green">
 
-### Section 5 | Preliminary data visualizations: Ranked stressors by gender
+### Section 6 | Preliminary data visualizations: Ranked stressors by gender
 
 </div>
 
@@ -1028,7 +1211,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 
 (using "slopegraphs": [example](https://charliepark.org/slopegraphs/), [example](https://acaird.github.io/computers/r/2013/11/27/slopegraphs-ggplot), [example](https://ibecav.github.io/slopegraph/))
 
-Section 6: Stress during the coronavirus pandemic
+Questionnaire Section 6: Stress during the coronavirus pandemic
 
 - 1) Did you experience increased stress that related to your efficiency at work (e.g., procrastination, deadlines)? `stress_delaywork`
 - 2) Did you experience increased stress related to your future career plans? `stress_career`
@@ -1042,9 +1225,9 @@ Section 6: Stress during the coronavirus pandemic
 
 
 - Preparing data for plotting
-```{r 5.01, fig.height=7, fig.width=10, echo=FALSE}
+```{r 6.01, echo=FALSE}
 #Selecting relevant columns, dropping NAs, and nonbinary gender respondents (because n = 3)
-df.stress <- k.data %>% select(age:acad, stress_delaywork:stress_relation, stress_moneyemplo:stress_anxiety) %>% 
+df.stress <- k.data %>% select(year_of_birth:acad, stress_delaywork:stress_relation, stress_moneyemplo:stress_anxiety) %>% 
   drop_na() %>%
   filter(gender != "other_notsay")
 #Calculating the percent of respondents with moderate, strong, or extreme stress (p.ss) for each topic
@@ -1079,7 +1262,7 @@ df.stress.all <- df.stress.all %>% mutate(label = case_when(
 ```
 
 - Plotting
-```{r 5.02, fig.height=7, fig.width=10, echo=FALSE}
+```{r 6.02, fig.height=7, fig.width=10, echo=FALSE}
 #Putting all the thematic changes to the plot in a list:
 MySpecial <- list(  
   # move the x axis labels up top
@@ -1125,7 +1308,7 @@ p.rs <- ggplot(data = df.stress.all, aes(x = gender, y = value, group = variable
   labs(
     title    = "Percent of respondents reporting moderate or greater stress related to:",
     ##Storing sample size as a variable to use in the caption to the plot below
-    subtitle = paste0("n = ", length(df.stress$age)),
+    subtitle = paste0("n = ", length(df.stress$year_of_birth)),
     caption  = "Madagascar STEM students and professionals"
   )
 
@@ -1141,7 +1324,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 </style>
 <div class = "green">
 
-### Section 6 | Preliminary data visualizations: Household and contact patterns
+### Section 7 | Preliminary data visualizations: Household crowding and age patterns
 
 </div>
 
@@ -1154,24 +1337,23 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 
   - 4.06 Household members `hh_member_count` : `age_hh_member`, `age_hh_member_001`:`age_hh_member_014`
 
-  - 5.02 In the last week, approximately with how many people besides those in your household did you spend more than 10 minutes in close contact with? `close_contact`
+***
 
-(Preparing the data for plotting)
+- Preparing the data for plotting
 
-```{r 6.01, fig.height=7, fig.width=10, echo=FALSE}
-
+```{r 7.01, echo=FALSE}
 df.hhc <- k.data %>% 
   #Selecting relevant columns
-  select(index, age, gender, region, acad, 
+  select(index, year_of_birth, gender, region, acad, 
          nb_room,
          hh_member_count,
          close_contact) %>%
   #Converting columns to numeric
-  mutate(age = as.numeric(age), nb_room = as.numeric(nb_room), hh_member_count = as.numeric(hh_member_count)) %>%
+  mutate(year_of_birth = as.numeric(year_of_birth), nb_room = as.numeric(nb_room), hh_member_count = as.numeric(hh_member_count)) %>%
   #Adding 1 to the hh size (to include the respondent + the other members of the household)
   mutate(hh_member_count = hh_member_count + 1) %>%
   #Calculating approximate age of the respondent and storing as age_hh_memb_i
-  mutate(age_hh_memb_i = 2021-age) %>%
+  mutate(age_hh_memb_i = 2021-year_of_birth) %>%
   #Using join to add the columns containing ages of the other household members
   #Doing separately so can convert all columns to numeric using mutate_if()
   full_join(k.data %>% 
@@ -1205,7 +1387,8 @@ df.hhc <- k.data %>%
   #Giving a rank for plotting (index_hh) that restarts at 1 for each household size
   group_by(hh_member_count) %>% mutate(index_hh = 1:length(index)) %>% ungroup() %>%
   #Melting so each individual is on a row
-  melt(id.vars = c("index", "index_hh", "age", "gender", "region", "acad", "nb_room", "hh_member_count", "close_contact",
+  melt(id.vars = c("index", "index_hh", "year_of_birth", "gender", "region", "acad", 
+                   "nb_room", "hh_member_count", "close_contact",
                    "pers_per_room", "cols_w_age", "hh_diff", "max_age")) %>%
   #For plotting with a different color, adding a marker for individuals 65 and older
   mutate(old = as.factor(ifelse(max_age > 64, 1, 0))) %>%
@@ -1213,9 +1396,11 @@ df.hhc <- k.data %>%
   drop_na()
 ```
 
-(plotting the household size distribution)
+***
 
-```{r 6.02, fig.height=7, fig.width=10, echo=FALSE}
+- Plotting the household size distribution
+
+```{r 7.02, fig.height=7, fig.width=10, echo=FALSE}
 #Highlighting households with individuals over 65
 p.hhc <- df.hhc %>% ggplot(aes(x = value, y = index_hh, color = old)) +
   geom_point() +
@@ -1238,9 +1423,9 @@ p.hhc <- df.hhc %>% ggplot(aes(x = value, y = index_hh, color = old)) +
 p.hhc
 ```
 
-(plotting the histogram of the number of individuals per room)
+- Plotting the histogram of the number of individuals per room
 
-```{r 6.03, fig.height=7, fig.width=10, echo=FALSE}
+```{r 7.03, fig.height=7, fig.width=10, echo=FALSE}
 #Keeping the pers_per_room from the melted df.hhc
 df.hhc %>% group_by(index) %>% summarize(pers_per_room = max(pers_per_room), .groups = "drop") %>%
   ggplot(aes(x = pers_per_room)) +
