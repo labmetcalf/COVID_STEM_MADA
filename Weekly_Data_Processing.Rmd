@@ -175,17 +175,28 @@ k.data <- k.data %>%
 
 1. columns starting with weird characters: `_index` to `index`; `_submission_time` to `submission_time`
 2. columns with uninformative names: `age` to `year_of_birth`
+3. `research_fund_bef`:`fund_pend`: making research funding question column names more intuitive
 
 
 ```{r 2.02, echo = FALSE}
 k.data <- k.data %>% 
   rename(index = `_index`) %>% rename(submission_time = `_submission_time`) %>%
-  rename(year_of_birth = age)
+  rename(year_of_birth = age) %>%
+  #Research funds
+  rename(res_fund_amt_bef  = research_fund_bef, #Before pandemic, approx. total res funds managed
+         res_fund_y_n_dur  = research_fund,     #During the pandemic, did you receive funds
+         res_fund_dur_nb   = research_fund_nb,  #If yes, number of grants/funds received
+         res_fund_amt_curr = research_fund_dur, #Approx. total res funds managed currently
+         res_fund_issue    = fund_issue,        #Did the pandemic cause issues with accessing funds
+         res_fund_app_dur  = fund_pend_yes_no,  #During the pandemic, Did you apply for funds?
+         res_fund_pend_nb  = fund_pend          #If yes, how many grant applications are pending
+         )
 ```
 
 #### Section 2.3 | Removing individuals with unlikely/illogical responses
 
 1. `index` = `990`: Individual sampled 2021-05-06 reported age of 100 years but walks to work each day
+
 
 ```{r 2.03, echo = FALSE}
 k.data <- k.data %>% filter(!(today == "2021-05-06" & year_of_birth == "1921" & index == 990))
@@ -210,9 +221,6 @@ k.data <- k.data %>% mutate(month_closed = recode(month_closed,
     "2021-03-04 00:00:00" = "3_4_mos",
     "2021-04-05 00:00:00" = "4_5_mos",
     "more5"               = "5plus_mos"))
-
-table(k.data$month_closed)
-
 ```
 
 
