@@ -19,9 +19,9 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 ## HEADER INFO
 
 - Benny Rice | Department of Ecology and Evolutionary Biology | Princeton University | b.rice@princeton.edu
-- Code associated with processing data from the **Impacts of Covid-19 on Malagasy STEM** project
+- Code associated with processing data from the **Impacts of COVID-19 on Malagasy STEM** project
 - Apologies in advance for amateurish code (ie all the loops and clunkiness)
-- In colloboration with Lova Marline, Miary Raselimanana, Seheno Andriantsaralaza, Hervet Randriamady
+- In collaboration with Lova Marline, Miary Raselimanana, Seheno Andriantsaralaza, Hervet Randriamady and others
 
 </div>
 
@@ -80,7 +80,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
     - Value and header format `XML values and headers`
     - `Advanced options`: Select `Include fields from all 32 deployed versions`
       - Note this will include a series of columns at the far end corresponding to changed questions
-      - Note: Manually delete the "other_info" column
+      - Note: Manually delete the `add_info` column
         - This column contains a free text response from respondents; deleted in case there is personal info within
   - Manually uploading to [the GitHub repository for this project](https://github.com/labmetcalf/COVID_STEM_MADA)
 - Data file name should include the date at which data was downloaded
@@ -112,6 +112,7 @@ div.green { background-color:#d1ebd6; border-radius: 5px; padding: 10px;}
 - Removing individuals who chose not to start the survey
 - Removing individuals who are not Malagasy or did not live in Madagascar in 2020
 - Removing individuals who are not in a STEM field
+- Removing individuals with unlikely/illogical responses (e.g., age 100 years but walks to work each day)
 
 ```{r 2.01.1, echo = FALSE}
 k.data <- k.data %>% 
@@ -120,6 +121,9 @@ k.data <- k.data %>%
   filter(!is.na(residence))   %>% filter(residence   == "yes") %>%
   filter(!is.na(field))       %>% filter(field       != "nonstem") %>%
   filter(!is.na(gender))
+
+
+
 ```
 
 **(2)** Removing columns that do not contain data
